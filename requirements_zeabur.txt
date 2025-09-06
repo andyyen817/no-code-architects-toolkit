@@ -1,0 +1,36 @@
+# ZEABUR Production Dependencies - CPU Optimized
+# No-Code Architects Toolkit
+
+# Core Framework
+flask==3.1.2
+flask-cors==6.0.1
+werkzeug==3.1.3
+
+# Data Processing
+jsonschema==4.25.1
+python-dotenv==1.1.1
+requests==2.31.0
+
+# AI/ML - CPU Optimized
+faster-whisper==1.0.2
+numpy>=1.21.0
+
+# Media Processing
+ffmpeg-python==0.2.0
+Pillow>=8.0.0
+
+# Utilities
+psutil==5.9.0
+srt==3.5.3
+
+# Optional (for enhanced features)
+# Note: These will be installed if available, skipped if not
+# matplotlib>=3.5.0  # For audio visualization
+# opencv-python-headless>=4.5.0  # For advanced video processing
+
+# System dependencies (handled by Dockerfile):
+# - ffmpeg (system package)
+# - python3-dev (system package)
+# - build-essential (system package)
+
+
