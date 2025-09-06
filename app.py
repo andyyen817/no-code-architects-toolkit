@@ -25,6 +25,11 @@ import uuid
 import os
 import time
 from version import BUILD_NUMBER  # Import the BUILD_NUMBER
+
+# Add health check endpoint for Zeabur
+@app.route('/health')
+def health_check():
+    return {"status": "healthy", "build": BUILD_NUMBER, "fix": "zeabur-deployment-v1.0.1"}
 from app_utils import log_job_status, discover_and_register_blueprints  # Import the discover_and_register_blueprints function
 
 MAX_QUEUE_LENGTH = int(os.environ.get('MAX_QUEUE_LENGTH', 0))
