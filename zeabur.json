@@ -1,0 +1,34 @@
+{
+  "name": "vidspark-backend",
+  "services": [
+    {
+      "name": "vidspark-backend",
+      "dockerfile": "Dockerfile",
+      "port": 8080,
+      "env": {
+        "API_KEY": "vidspark-backend-2025",
+        "LOCAL_STORAGE_PATH": "./temp",
+        "DEBUG": "true",
+        "VIDSPARK_ENABLED": "true",
+        "VIDSPARK_ENVIRONMENT": "production",
+        "PYTHONUNBUFFERED": "1",
+        "GUNICORN_WORKERS": "2",
+        "GUNICORN_TIMEOUT": "300",
+        "WHISPER_CACHE_DIR": "/app/whisper_cache",
+        "FFMPEG_THREADS": "2",
+        "MAX_VIDEO_SIZE": "100MB",
+        "WHISPER_MODEL": "tiny"
+      },
+      "volumes": [
+        {
+          "name": "whisper-cache",
+          "mountPath": "/app/whisper_cache"
+        },
+        {
+          "name": "temp-storage",
+          "mountPath": "/app/temp"
+        }
+      ]
+    }
+  ]
+}
