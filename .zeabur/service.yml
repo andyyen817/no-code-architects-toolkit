@@ -1,0 +1,47 @@
+name: vidspark-backend
+type: dockerfile
+dockerfile: Dockerfile
+port: 8080
+domains:
+  - domain: vidspark-backend.zeabur.app
+env:
+  # 基礎配置
+  API_KEY: vidspark-backend-2025
+  LOCAL_STORAGE_PATH: ./temp
+  DEBUG: true
+  
+  # VIDSPARK專用配置
+  VIDSPARK_ENABLED: true
+  VIDSPARK_ENVIRONMENT: production
+  VIDSPARK_MAX_RETRY_ATTEMPTS: 5
+  VIDSPARK_POLLING_INTERVAL: 5000
+  VIDSPARK_TIMEOUT_MINUTES: 10
+  
+  # FFmpeg配置
+  FFMPEG_THREADS: 2
+  MAX_VIDEO_SIZE: 100MB
+  OVERLAY_CACHE_SIZE: 50MB
+  
+  # Python/Gunicorn配置
+  PYTHONUNBUFFERED: 1
+  GUNICORN_WORKERS: 2
+  GUNICORN_TIMEOUT: 300
+  
+  # Whisper配置
+  WHISPER_CACHE_DIR: /app/whisper_cache
+  WHISPER_MODEL: tiny
+  
+  # 優化配置
+  MAX_QUEUE_LENGTH: 10
+  FFMPEG_PRESET: medium
+  WHISPER_THREADS: 2
+
+# 健康檢查
+healthcheck:
+  path: /v1/toolkit/test
+  port: 8080
+  
+# 資源限制
+resources:
+  cpu: 1000m
+  memory: 2Gi
