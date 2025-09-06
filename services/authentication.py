@@ -23,6 +23,10 @@ from config import API_KEY
 def authenticate(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
+        # Skip authentication for OPTIONS requests (CORS preflight)
+        if request.method == 'OPTIONS':
+            return '', 200
+            
         api_key = request.headers.get('X-API-Key')
         
         if api_key != API_KEY:

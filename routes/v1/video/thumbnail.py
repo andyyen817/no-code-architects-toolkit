@@ -26,7 +26,7 @@ from services.cloud_storage import upload_file
 v1_video_thumbnail_bp = Blueprint('v1_video_thumbnail', __name__)
 logger = logging.getLogger(__name__)
 
-@v1_video_thumbnail_bp.route('/v1/video/thumbnail', methods=['POST'])
+@v1_video_thumbnail_bp.route('/v1/video/thumbnail-cloud', methods=['POST'])
 @authenticate
 @validate_payload({
     "type": "object",

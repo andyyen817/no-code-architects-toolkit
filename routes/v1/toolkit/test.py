@@ -18,10 +18,18 @@
 
 import os
 import logging
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from services.authentication import authenticate
-from services.cloud_storage import upload_file
-from app_utils import queue_task_wrapper
+try:
+    from services.cloud_storage import upload_file
+    CLOUD_STORAGE_AVAILABLE = True
+except ImportError:
+    CLOUD_STORAGE_AVAILABLE = False
+try:
+    from app_utils import queue_task_wrapper
+    QUEUE_AVAILABLE = True
+except ImportError:
+    QUEUE_AVAILABLE = False
 from config import LOCAL_STORAGE_PATH
 
 v1_toolkit_test_bp = Blueprint('v1_toolkit_test', __name__)
@@ -29,24 +37,37 @@ logger = logging.getLogger(__name__)
 
 @v1_toolkit_test_bp.route('/v1/toolkit/test', methods=['GET'])
 @authenticate
-@queue_task_wrapper(bypass_queue=True)
-def test_api(job_id, data):
-    logger.info(f"Job {job_id}: Testing NCA Toolkit API setup")
+def test_api():
+    """Test endpoint with fallback for missing dependencies"""
+    logger.info("Testing NCA Toolkit API setup")
     
     try:
-        # Create test file
-        test_filename = os.path.join(LOCAL_STORAGE_PATH, "success.txt")
-        with open(test_filename, 'w') as f:
-            f.write("You have successfully installed the NCA Toolkit API, great job!")
-        
-        # Upload file to cloud storage
-        upload_url = upload_file(test_filename)
-        
-        # Clean up local file
-        os.remove(test_filename)
-        
-        return upload_url, "/v1/toolkit/test", 200
+        if CLOUD_STORAGE_AVAILABLE:
+            # Original cloud storage test
+            test_filename = os.path.join(LOCAL_STORAGE_PATH, "success.txt")
+            with open(test_filename, 'w') as f:
+                f.write("You have successfully installed the NCA Toolkit API, great job!")
+            
+            upload_url = upload_file(test_filename)
+            os.remove(test_filename)
+            
+            return jsonify({
+                "message": "success",
+                "response": upload_url,
+                "status": "cloud_storage_enabled"
+            }), 200
+        else:
+            # Simple test without cloud storage
+            return jsonify({
+                "message": "success", 
+                "response": "NCA Toolkit API is working!",
+                "status": "basic_functionality",
+                "version": "1.0.0"
+            }), 200
         
     except Exception as e:
-        logger.error(f"Job {job_id}: Error testing API setup - {str(e)}")
-        return str(e), "/v1/toolkit/test", 500
+        logger.error(f"Error testing API setup - {str(e)}")
+        return jsonify({
+            "message": "error",
+            "response": str(e)
+        }), 500

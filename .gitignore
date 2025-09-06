@@ -1,4 +1,127 @@
-.env_variables.json
-.DS_Store
-.env_shell.json
+# No-Code Architects Toolkit - Git Ignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environment files
 .env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+
+# Output and temporary files
+output/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Media files (too large for git)
+*.mp4
+*.mp3
+*.wav
+*.avi
+*.mov
+*.mkv
+*.srt
+*.ass
+
+# FFmpeg binaries (will be installed in container)
+ffmpeg-binary/
+ffmpeg/
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+test_*.mp3
+test_*.mp4
+test_*.wav
+
+# Windows batch files (local development only)
+*.bat
+
+# Backup files
+*.bak
+*.backup
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
