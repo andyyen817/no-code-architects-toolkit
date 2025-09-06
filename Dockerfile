@@ -151,7 +151,8 @@ RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg && \
         --enable-gnutls \
     && make -j$(nproc) && \
     make install && \
-    cd .. && rm -rf ffmpeg
+    cd .. && rm -rf ffmpeg && \
+    echo "FFmpeg build completed successfully"
 
 # Add /usr/local/bin to PATH (if not already included)
 ENV PATH="/usr/local/bin:${PATH}"
