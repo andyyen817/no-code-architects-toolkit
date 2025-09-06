@@ -3,7 +3,7 @@
   "services": [
     {
       "name": "vidspark-backend",
-      "dockerfile": "Dockerfile",
+      "dockerfile": "Dockerfile.simple",
       "port": 8080,
       "env": {
         "API_KEY": "vidspark-backend-2025",

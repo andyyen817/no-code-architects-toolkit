@@ -1,0 +1,63 @@
+# Simplified Dockerfile for faster ZEABUR deployment
+FROM python:3.9-slim
+
+# Install system dependencies and FFmpeg from apt
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    ffmpeg \
+    fonts-liberation \
+    fontconfig \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set work directory
+WORKDIR /app
+
+# Set environment variable for Whisper cache
+ENV WHISPER_CACHE_DIR="/app/whisper_cache"
+ENV PYTHONUNBUFFERED=1
+
+# Create cache directory
+RUN mkdir -p ${WHISPER_CACHE_DIR}
+
+# Copy the requirements file first to optimize caching
+COPY requirements.txt .
+
+# Install Python dependencies with faster-whisper instead of openai-whisper
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir Flask Flask-CORS Werkzeug && \
+    pip install --no-cache-dir gunicorn requests ffmpeg-python && \
+    pip install --no-cache-dir APScheduler srt numpy psutil && \
+    pip install --no-cache-dir boto3 Pillow matplotlib && \
+    pip install --no-cache-dir faster-whisper jsonschema && \
+    pip install --no-cache-dir yt-dlp
+
+# Create the appuser 
+RUN useradd -m appuser && chown appuser:appuser /app
+
+# Switch to the appuser
+USER appuser
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/v1/toolkit/test || exit 1
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+export PYTHONPATH=/app:$PYTHONPATH\n\
+gunicorn --bind 0.0.0.0:8080 \
+    --workers ${GUNICORN_WORKERS:-1} \
+    --timeout ${GUNICORN_TIMEOUT:-300} \
+    --worker-class sync \
+    --keep-alive 80 \
+    app:app' > /app/run_simple.sh && \
+    chmod +x /app/run_simple.sh
+
+# Run the app
+CMD ["/app/run_simple.sh"]
