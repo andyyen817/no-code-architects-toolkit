@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No-Code Architects Toolkit - ZEABUR 雲端測試</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .test-section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .test-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title .icon {
+            width: 40px;
+            height: 40px;
+            background: #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 1.2em;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .test-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .test-card:hover {
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .test-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .test-card p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-available {
+            background: #4CAF50;
+        }
+        
+        .status-partial {
+            background: #FF9800;
+        }
+        
+        .status-unavailable {
+            background: #f44336;
+        }
+        
+        .test-url {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        
+        .server-info {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .server-info h3 {
+            margin-bottom: 10px;
+        }
+        
+        .server-info code {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 No-Code Architects Toolkit</h1>
+            <p>ZEABUR 雲端功能測試中心</p>
+        </div>
+        
+        <div class="server-info">
+            <h3>🌐 服務器信息</h3>
+            <p><strong>ZEABUR URL:</strong> <code id="base-url">https://你的zeabur域名.zeabur.app</code></p>
+            <p><strong>API Base:</strong> <code id="api-base">https://你的zeabur域名.zeabur.app/v1</code></p>
+            <p><strong>健康檢查:</strong> <code>/health</code></p>
+            <p><strong>認證方式:</strong> API Key 認證</p>
+        </div>
+        
+        <!-- 核心功能測試 -->
+        <div class="test-section">
+            <div class="section-title">
+                <span class="icon">🔧</span>
+                核心功能測試
+            </div>
+            
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>健康檢查</h3>
+                    <p>測試服務器基本狀態和可用性</p>
+                    <div class="test-url">GET /health</div>
+                    <button class="btn" onclick="testHealth()">測試健康檢查</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>API 認證</h3>
+                    <p>測試API認證機制是否正常工作</p>
+                    <div class="test-url">POST /v1/toolkit/authenticate</div>
+                    <button class="btn" onclick="testAuth()">測試認證</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>任務狀態</h3>
+                    <p>測試任務管理和狀態查詢功能</p>
+                    <div class="test-url">GET /v1/toolkit/jobs_status</div>
+                    <button class="btn" onclick="testJobStatus()">測試任務狀態</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 音頻處理功能 -->
+        <div class="test-section">
+            <div class="section-title">
+                <span class="icon">🎵</span>
+                音頻處理功能
+            </div>
+            
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>音頻轉錄 (Faster-Whisper)</h3>
+                    <p>使用faster-whisper引擎進行音頻轉文字</p>
+                    <div class="test-url">POST /v1/media/transcribe_enhanced</div>
+                    <button class="btn" onclick="testTranscription()">測試轉錄</button>
+                    <button class="btn btn-secondary" onclick="testTranscriptionSimple()">簡單轉錄</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>音頻合併</h3>
+                    <p>將多個音頻文件合併為一個</p>
+                    <div class="test-url">POST /v1/audio/concatenate_real</div>
+                    <button class="btn" onclick="testAudioConcat()">測試音頻合併</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>音頻轉MP3</h3>
+                    <p>將各種格式音頻轉換為MP3</p>
+                    <div class="test-url">POST /v1/media/convert/mp3_real</div>
+                    <button class="btn" onclick="testMP3Convert()">測試MP3轉換</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 視頻處理功能 -->
+        <div class="test-section">
+            <div class="section-title">
+                <span class="icon">🎬</span>
+                視頻處理功能
+            </div>
+            
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>視頻剪切</h3>
+                    <p>按時間範圍剪切視頻片段</p>
+                    <div class="test-url">POST /v1/video/cut_real</div>
+                    <button class="btn" onclick="testVideoCut()">測試視頻剪切</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>視頻修剪</h3>
+                    <p>修剪視頻的開始和結束部分</p>
+                    <div class="test-url">POST /v1/video/trim_real</div>
+                    <button class="btn" onclick="testVideoTrim()">測試視頻修剪</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>視頻縮略圖</h3>
+                    <p>從視頻中提取縮略圖圖片</p>
+                    <div class="test-url">POST /v1/video/thumbnail_real</div>
+                    <button class="btn" onclick="testVideoThumbnail()">測試縮略圖</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>視頻字幕</h3>
+                    <p>為視頻添加字幕（使用faster-whisper）</p>
+                    <div class="test-url">POST /v1/video/caption_simple</div>
+                    <button class="btn" onclick="testVideoCaption()">測試視頻字幕</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 圖像處理功能 -->
+        <div class="test-section">
+            <div class="section-title">
+                <span class="icon">🖼️</span>
+                圖像處理功能
+            </div>
+            
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>圖片轉視頻</h3>
+                    <p>將靜態圖片轉換為動態視頻</p>
+                    <div class="test-url">POST /v1/image/convert/image_to_video_real</div>
+                    <button class="btn" onclick="testImageToVideo()">測試圖片轉視頻</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 文件管理功能 -->
+        <div class="test-section">
+            <div class="section-title">
+                <span class="icon">📁</span>
+                文件管理功能
+            </div>
+            
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>文件上傳</h3>
+                    <p>上傳音頻、視頻、圖片文件</p>
+                    <div class="test-url">POST /v1/toolkit/upload</div>
+                    <button class="btn" onclick="testFileUpload()">測試文件上傳</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3><span class="status-indicator status-available"></span>媒體元數據</h3>
+                    <p>獲取媒體文件的詳細信息</p>
+                    <div class="test-url">POST /v1/media/metadata</div>
+                    <button class="btn" onclick="testMetadata()">測試元數據</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 結果顯示 -->
+        <div class="test-section">
+            <div class="section-title">
+                <span class="icon">📊</span>
+                測試結果
+            </div>
+            <div id="test-results" style="background: #f5f5f5; padding: 20px; border-radius: 10px; min-height: 200px;">
+                <p>點擊上方按鈕開始測試功能...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 配置 - ZEABUR實際域名
+        const BASE_URL = 'https://vidsparkback.zeabur.app';
+        const API_KEY = 'production-api-key-2024'; // 根據你的配置更新
+        
+        // 更新頁面上的URL顯示
+        document.getElementById('base-url').textContent = BASE_URL;
+        document.getElementById('api-base').textContent = BASE_URL + '/v1';
+        
+        function logResult(title, result, isError = false) {
+            const resultsDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = isError ? '#f44336' : '#4CAF50';
+            const icon = isError ? '❌' : '✅';
+            
+            resultsDiv.innerHTML += `
+                <div style="margin-bottom: 15px; padding: 10px; border-left: 4px solid ${color}; background: white; border-radius: 5px;">
+                    <strong>${icon} [${timestamp}] ${title}</strong><br>
+                    <pre style="margin-top: 8px; font-size: 0.9em; color: #666;">${JSON.stringify(result, null, 2)}</pre>
+                </div>
+            `;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(BASE_URL + url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': API_KEY,
+                        ...options.headers
+                    }
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // 測試函數
+        async function testHealth() {
+            logResult('健康檢查測試開始', '正在測試...');
+            const result = await makeRequest('/health');
+            logResult('健康檢查結果', result, !result.success);
+        }
+        
+        async function testAuth() {
+            logResult('認證測試開始', '正在測試...');
+            const result = await makeRequest('/v1/toolkit/authenticate', {
+                method: 'POST',
+                body: JSON.stringify({ api_key: API_KEY })
+            });
+            logResult('認證測試結果', result, !result.success);
+        }
+        
+        async function testJobStatus() {
+            logResult('任務狀態測試開始', '正在測試...');
+            const result = await makeRequest('/v1/toolkit/jobs_status');
+            logResult('任務狀態結果', result, !result.success);
+        }
+        
+        async function testTranscription() {
+            logResult('音頻轉錄測試開始', '使用faster-whisper引擎...');
+            const testData = {
+                media_url: 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav',
+                language: 'auto',
+                task: 'transcribe'
+            };
+            const result = await makeRequest('/v1/media/transcribe_enhanced', {
+                method: 'POST',
+                body: JSON.stringify(testData)
+            });
+            logResult('音頻轉錄結果', result, !result.success);
+        }
+        
+        async function testTranscriptionSimple() {
+            logResult('簡單轉錄測試開始', '使用faster-whisper引擎...');
+            const testData = {
+                media_url: 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav'
+            };
+            const result = await makeRequest('/v1/media/transcribe_simple', {
+                method: 'POST',
+                body: JSON.stringify(testData)
+            });
+            logResult('簡單轉錄結果', result, !result.success);
+        }
+        
+        async function testVideoCut() {
+            logResult('視頻剪切測試開始', '正在測試...');
+            const testData = {
+                video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+                start_time: '00:00:05',
+                end_time: '00:00:15'
+            };
+            const result = await makeRequest('/v1/video/cut_real', {
+                method: 'POST',
+                body: JSON.stringify(testData)
+            });
+            logResult('視頻剪切結果', result, !result.success);
+        }
+        
+        async function testVideoThumbnail() {
+            logResult('視頻縮略圖測試開始', '正在測試...');
+            const testData = {
+                video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+                timestamp: '00:00:05'
+            };
+            const result = await makeRequest('/v1/video/thumbnail_real', {
+                method: 'POST',
+                body: JSON.stringify(testData)
+            });
+            logResult('縮略圖結果', result, !result.success);
+        }
+        
+        async function testMP3Convert() {
+            logResult('MP3轉換測試開始', '正在測試...');
+            const testData = {
+                media_url: 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav'
+            };
+            const result = await makeRequest('/v1/media/convert/mp3_real', {
+                method: 'POST',
+                body: JSON.stringify(testData)
+            });
+            logResult('MP3轉換結果', result, !result.success);
+        }
+        
+        async function testImageToVideo() {
+            logResult('圖片轉視頻測試開始', '正在測試...');
+            const testData = {
+                image_url: 'https://via.placeholder.com/1280x720/4CAF50/white?text=Test+Image',
+                length: 5.0,
+                frame_rate: 30
+            };
+            const result = await makeRequest('/v1/image/convert/image_to_video_real', {
+                method: 'POST',
+                body: JSON.stringify(testData)
+            });
+            logResult('圖片轉視頻結果', result, !result.success);
+        }
+        
+        async function testMetadata() {
+            logResult('元數據測試開始', '正在測試...');
+            const testData = {
+                media_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
+            };
+            const result = await makeRequest('/v1/media/metadata', {
+                method: 'POST',
+                body: JSON.stringify(testData)
+            });
+            logResult('元數據結果', result, !result.success);
+        }
+        
+        // 其他測試函數...
+        async function testAudioConcat() {
+            logResult('音頻合併測試', '功能開發中...');
+        }
+        
+        async function testVideoTrim() {
+            logResult('視頻修剪測試', '功能開發中...');
+        }
+        
+        async function testVideoCaption() {
+            logResult('視頻字幕測試', '功能開發中...');
+        }
+        
+        async function testFileUpload() {
+            logResult('文件上傳測試', '需要選擇文件...');
+        }
+        
+        // 頁面加載完成後自動測試健康檢查
+        window.onload = function() {
+            setTimeout(testHealth, 1000);
+        };
+    </script>
+</body>
+</html>
