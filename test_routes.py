@@ -8,8 +8,15 @@
 from flask import Blueprint, send_file, jsonify, request, current_app
 import os
 import json
-import pymysql
 from datetime import datetime
+
+# Try to import pymysql with fallback
+try:
+    import pymysql
+    PYMYSQL_AVAILABLE = True
+except ImportError:
+    PYMYSQL_AVAILABLE = False
+    print("Warning: PyMySQL not available - database features disabled")
 
 # 創建測試藍圖
 test_bp = Blueprint('test', __name__, url_prefix='/test')
@@ -26,6 +33,8 @@ DB_CONFIG = {
 
 def get_db_connection():
     """獲取數據庫連接"""
+    if not PYMYSQL_AVAILABLE:
+        return None
     try:
         return pymysql.connect(**DB_CONFIG)
     except Exception as e:
