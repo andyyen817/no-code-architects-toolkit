@@ -580,8 +580,8 @@
             const file = fileInput.files[0];
             log(`🎵 開始音頻轉換測試: ${file.name} -> ${format}`);
             
+            const startTime = Date.now();
             try {
-                const startTime = Date.now();
                 const formData = new FormData();
                 formData.append('audio', file);
                 formData.append('format', format);
@@ -772,8 +772,8 @@
             const file = fileInput.files[0];
             log(`🎬 開始視頻處理測試: ${file.name} - ${operation}`);
             
+            const startTime = Date.now();
             try {
-                const startTime = Date.now();
                 const formData = new FormData();
                 formData.append('video', file);
                 formData.append('operation', operation);
@@ -946,8 +946,8 @@
             
             log(`📝 開始文本處理測試: ${operation}`);
             
+            const startTime = Date.now();
             try {
-                const startTime = Date.now();
                 
                 const response = await fetch(`${BASE_URL}/v1/text/process`, {
                     method: 'POST',
@@ -1105,3 +1105,4 @@
     </script>
 </body>
 </html>
+

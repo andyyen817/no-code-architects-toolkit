@@ -44,7 +44,16 @@ def get_db_connection():
 # 測試頁面路由
 @test_bp.route('/nca')
 def nca_test_page():
-    """No-Code Architects Toolkit 測試頁面"""
+    """No-Code Architects Toolkit 測試頁面 - 修復版"""
+    try:
+        file_path = os.path.join(current_app.root_path, 'nca_cloud_test_fixed.html')
+        return send_file(file_path, mimetype='text/html')
+    except Exception as e:
+        return jsonify({'error': f'頁面載入失敗: {str(e)}'}), 500
+
+@test_bp.route('/nca-original')
+def nca_test_page_original():
+    """No-Code Architects Toolkit 測試頁面 - 原版（有問題）"""
     try:
         file_path = os.path.join(current_app.root_path, 'nca_cloud_test.html')
         return send_file(file_path, mimetype='text/html')

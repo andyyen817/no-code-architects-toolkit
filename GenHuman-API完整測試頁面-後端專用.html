@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenHuman API 完整測試頁面 - 後端專用</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .test-section { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .json-viewer { font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; }
+        .status-success { color: #10b981; }
+        .status-error { color: #ef4444; }
+        .status-processing { color: #f59e0b; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .btn-success { background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); }
+        .btn-warning { background: linear-gradient(135deg, #fb923c 0%, #f97316 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 標題區域 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-flask text-purple-600 mr-3"></i>
+                GenHuman API 完整測試頁面
+            </h1>
+            <p class="text-xl text-gray-600 mb-4">基於前端成功經驗，為後端提供的完整API測試工具</p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-4xl mx-auto">
+                <h3 class="font-semibold text-blue-900 mb-2">📋 成功工作流程（前端驗證）：</h3>
+                <div class="text-blue-800 text-sm">
+                    <span class="font-medium">1. 免費聲音克隆</span> → 拿到voice_id → 
+                    <span class="font-medium">2. 付費聲音合成</span> → 拿到音頻URL → 
+                    <span class="font-medium">3. 免費數字人克隆</span> → 拿到digital_human_id → 
+                    <span class="font-medium">4. 數字人音頻URL + 數字人克隆ID = 付費數字人合成</span> → 完成
+                </div>
+            </div>
+        </div>
+
+        <!-- API基礎信息 -->
+        <div class="test-section p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                API基礎配置
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">API基礎地址：</label>
+                    <input type="text" id="apiBase" value="https://api.yidevs.com" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">認證Token：</label>
+                    <input type="password" id="apiToken" 
+                           value="08D7EE7F91D258F27B4ADDF59CDDDEDE.1E95F76130BA23D37CE7BBBD69B19CCF.KYBVDWNR"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+            </div>
+        </div>
+
+        <!-- 步驟一：免費聲音克隆 -->
+        <div class="test-section p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-lg mr-3">步驟 1</span>
+                <i class="fas fa-microphone text-green-600 mr-2"></i>
+                免費聲音克隆
+            </h2>
+            
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <p class="text-green-800 font-medium">
+                    🎯 目標：上傳音頻文件，獲得voice_id用於後續聲音合成
+                </p>
+                <p class="text-green-700 text-sm mt-1">
+                    📋 端點：POST /app/human/human/Voice/clone
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">請求參數</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">聲音名稱：</label>
+                            <input type="text" id="voiceName" value="測試聲音_Andy" 
+                                   placeholder="例如：張小明的聲音"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">音頻URL：</label>
+                            <input type="url" id="voiceUrl" 
+                                   placeholder="https://example.com/audio.mp3"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">描述：</label>
+                            <input type="text" id="voiceDesc" value="男聲，清晰標準" 
+                                   placeholder="聲音特徵描述"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
+                    
+                    <button onclick="testVoiceClone()" 
+                            class="btn-success text-white px-6 py-3 rounded-lg font-medium mt-4 w-full hover:opacity-90 transition-opacity">
+                        <i class="fas fa-play mr-2"></i>
+                        開始聲音克隆
+                    </button>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">響應結果</h3>
+                    <div id="voiceResult" class="bg-gray-900 text-gray-100 rounded-lg p-4 h-64 overflow-y-auto json-viewer">
+                        <pre>等待API測試結果...</pre>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-blue-800">
+                            <i class="fas fa-lightbulb mr-1"></i>
+                            <strong>獲得的voice_id將用於步驟2</strong>
+                        </p>
+                        <div id="extractedVoiceId" class="mt-2 font-mono text-sm text-blue-900"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步驟二：付費聲音合成 -->
+        <div class="test-section p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-lg mr-3">步驟 2</span>
+                <i class="fas fa-volume-up text-blue-600 mr-2"></i>
+                付費聲音合成
+            </h2>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p class="text-blue-800 font-medium">
+                    🎯 目標：使用voice_id合成文字為語音，獲得音頻URL用於數字人合成
+                </p>
+                <p class="text-blue-700 text-sm mt-1">
+                    📋 端點：POST /app/human/human/Voice/synthesis
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">請求參數</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Voice ID（從步驟1獲得）：</label>
+                            <input type="text" id="synthesisVoiceId" 
+                                   placeholder="從步驟1複製voice_id"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">合成文字：</label>
+                            <textarea id="synthesisText" rows="3"
+                                      placeholder="請輸入要合成為語音的文字"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">大家好，我是數字人助手，很高興為您服務。</textarea>
+                        </div>
+                    </div>
+                    
+                    <button onclick="testVoiceSynthesis()" 
+                            class="btn-primary text-white px-6 py-3 rounded-lg font-medium mt-4 w-full hover:opacity-90 transition-opacity">
+                        <i class="fas fa-magic mr-2"></i>
+                        開始聲音合成
+                    </button>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">響應結果</h3>
+                    <div id="synthesisResult" class="bg-gray-900 text-gray-100 rounded-lg p-4 h-64 overflow-y-auto json-viewer">
+                        <pre>等待API測試結果...</pre>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-orange-50 rounded-lg">
+                        <p class="text-sm text-orange-800">
+                            <i class="fas fa-lightbulb mr-1"></i>
+                            <strong>獲得的音頻URL將用於步驟4</strong>
+                        </p>
+                        <div id="extractedAudioUrl" class="mt-2 font-mono text-sm text-orange-900"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步驟三：免費數字人克隆 -->
+        <div class="test-section p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-lg mr-3">步驟 3</span>
+                <i class="fas fa-user-tie text-purple-600 mr-2"></i>
+                免費數字人克隆
+            </h2>
+            
+            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+                <p class="text-purple-800 font-medium">
+                    🎯 目標：上傳人物照片，獲得digital_human_id用於數字人合成
+                </p>
+                <p class="text-purple-700 text-sm mt-1">
+                    📋 端點：POST /app/human/human/Index/humanClone
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">請求參數</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">角色名稱：</label>
+                            <input type="text" id="humanName" value="Andy老師" 
+                                   placeholder="例如：李老師"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">照片URL：</label>
+                            <input type="url" id="humanImageUrl" 
+                                   placeholder="https://example.com/photo.jpg"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        </div>
+                    </div>
+                    
+                    <button onclick="testHumanClone()" 
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium mt-4 w-full transition-colors">
+                        <i class="fas fa-clone mr-2"></i>
+                        開始數字人克隆
+                    </button>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">響應結果</h3>
+                    <div id="humanResult" class="bg-gray-900 text-gray-100 rounded-lg p-4 h-64 overflow-y-auto json-viewer">
+                        <pre>等待API測試結果...</pre>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-green-50 rounded-lg">
+                        <p class="text-sm text-green-800">
+                            <i class="fas fa-lightbulb mr-1"></i>
+                            <strong>獲得的digital_human_id將用於步驟4</strong>
+                        </p>
+                        <div id="extractedHumanId" class="mt-2 font-mono text-sm text-green-900"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步驟四：付費數字人合成 -->
+        <div class="test-section p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-lg mr-3">步驟 4</span>
+                <i class="fas fa-video text-red-600 mr-2"></i>
+                付費數字人合成（最終步驟）
+            </h2>
+            
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p class="text-red-800 font-medium">
+                    🎯 目標：結合音頻URL和digital_human_id，生成最終的數字人視頻
+                </p>
+                <p class="text-red-700 text-sm mt-1">
+                    📋 端點：POST /app/human/human/Index/created
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">請求參數</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">回調地址：</label>
+                            <input type="url" id="callbackUrl" 
+                                   value="https://your-domain.com/callback"
+                                   placeholder="https://your-domain.com/callback"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">場景任務ID（從步驟3獲得）：</label>
+                            <input type="text" id="sceneTaskId" 
+                                   placeholder="從步驟3複製digital_human_id"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">音頻地址（從步驟2獲得）：</label>
+                            <input type="url" id="audioAddress" 
+                                   placeholder="從步驟2複製音頻URL"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                        </div>
+                    </div>
+                    
+                    <button onclick="testDigitalHumanSynthesis()" 
+                            class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium mt-4 w-full transition-colors">
+                        <i class="fas fa-rocket mr-2"></i>
+                        生成數字人視頻
+                    </button>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">響應結果</h3>
+                    <div id="finalResult" class="bg-gray-900 text-gray-100 rounded-lg p-4 h-64 overflow-y-auto json-viewer">
+                        <pre>等待API測試結果...</pre>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-yellow-50 rounded-lg">
+                        <p class="text-sm text-yellow-800">
+                            <i class="fas fa-clock mr-1"></i>
+                            <strong>任務提交成功後，需要查詢任務狀態獲得最終視頻</strong>
+                        </p>
+                        <div id="extractedTaskId" class="mt-2 font-mono text-sm text-yellow-900"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 任務狀態查詢 -->
+        <div class="test-section p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-search text-gray-600 mr-2"></i>
+                任務狀態查詢
+            </h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">任務ID：</label>
+                            <input type="text" id="queryTaskId" 
+                                   placeholder="從步驟4複製video_task_id"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500">
+                        </div>
+                    </div>
+                    
+                    <button onclick="queryTaskStatus()" 
+                            class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium mt-4 w-full transition-colors">
+                        <i class="fas fa-search mr-2"></i>
+                        查詢任務狀態
+                    </button>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">查詢結果</h3>
+                    <div id="queryResult" class="bg-gray-900 text-gray-100 rounded-lg p-4 h-64 overflow-y-auto json-viewer">
+                        <pre>等待查詢結果...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作日志 -->
+        <div class="test-section p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-list text-gray-600 mr-2"></i>
+                操作日誌
+            </h2>
+            
+            <div class="flex justify-between items-center mb-4">
+                <p class="text-gray-600">實時記錄所有API調用和響應</p>
+                <button onclick="clearLogs()" 
+                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    <i class="fas fa-trash mr-1"></i>
+                    清空日誌
+                </button>
+            </div>
+            
+            <div id="operationLog" class="bg-gray-900 text-gray-100 rounded-lg p-4 h-80 overflow-y-auto json-viewer">
+                <pre id="logContent">📋 操作日誌將在這裡顯示...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局配置
+        const API_CONFIG = {
+            base: 'https://api.yidevs.com',
+            token: '08D7EE7F91D258F27B4ADDF59CDDDEDE.1E95F76130BA23D37CE7BBBD69B19CCF.KYBVDWNR'
+        };
+
+        // 存儲中間結果
+        let workflowData = {
+            voiceId: null,
+            audioUrl: null,
+            digitalHumanId: null,
+            taskId: null
+        };
+
+        // 日誌功能
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            
+            const logElement = document.getElementById('logContent');
+            logElement.textContent += logEntry;
+            document.getElementById('operationLog').scrollTop = document.getElementById('operationLog').scrollHeight;
+            
+            console.log(`[GenHuman API Test] ${message}`);
+        }
+
+        function clearLogs() {
+            document.getElementById('logContent').textContent = '📋 操作日誌已清空...\n';
+        }
+
+        // 通用API調用函數
+        async function callGenHumanAPI(endpoint, data, method = 'POST') {
+            const url = API_CONFIG.base + endpoint;
+            const token = document.getElementById('apiToken').value || API_CONFIG.token;
+            
+            log(`🚀 調用API: ${method} ${endpoint}`);
+            log(`📊 請求數據: ${JSON.stringify(data, null, 2)}`);
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: token,
+                        ...data
+                    })
+                });
+                
+                const result = await response.json();
+                log(`📥 API響應 (${response.status}): ${JSON.stringify(result, null, 2)}`);
+                
+                return {
+                    success: response.ok && result.code === 200,
+                    data: result,
+                    status: response.status
+                };
+            } catch (error) {
+                log(`❌ API調用失敗: ${error.message}`);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        // 步驟1：免費聲音克隆
+        async function testVoiceClone() {
+            const voiceName = document.getElementById('voiceName').value;
+            const voiceUrl = document.getElementById('voiceUrl').value;
+            const voiceDesc = document.getElementById('voiceDesc').value;
+            
+            if (!voiceName || !voiceUrl) {
+                alert('請填寫聲音名稱和音頻URL！');
+                return;
+            }
+            
+            log(`🎤 步驟1：開始免費聲音克隆`);
+            
+            const response = await callGenHumanAPI('/app/human/human/Voice/clone', {
+                voice_name: voiceName,
+                voice_url: voiceUrl,
+                describe: voiceDesc
+            });
+            
+            const resultElement = document.getElementById('voiceResult');
+            const extractElement = document.getElementById('extractedVoiceId');
+            
+            if (response.success && response.data.code === 200) {
+                const voiceId = response.data.data.voice_id;
+                workflowData.voiceId = voiceId;
+                
+                // 自動填入到步驟2
+                document.getElementById('synthesisVoiceId').value = voiceId;
+                
+                log(`✅ 聲音克隆成功！Voice ID: ${voiceId}`);
+                extractElement.innerHTML = `Voice ID: <span class="font-bold text-green-600">${voiceId}</span>`;
+                
+                resultElement.innerHTML = `<pre class="status-success">${JSON.stringify(response.data, null, 2)}</pre>`;
+            } else {
+                log(`❌ 聲音克隆失敗: ${JSON.stringify(response.data || response.error)}`);
+                resultElement.innerHTML = `<pre class="status-error">${JSON.stringify(response.data || response.error, null, 2)}</pre>`;
+            }
+        }
+
+        // 步驟2：付費聲音合成
+        async function testVoiceSynthesis() {
+            const voiceId = document.getElementById('synthesisVoiceId').value;
+            const text = document.getElementById('synthesisText').value;
+            
+            if (!voiceId || !text) {
+                alert('請填寫Voice ID和合成文字！');
+                return;
+            }
+            
+            log(`🔊 步驟2：開始付費聲音合成`);
+            
+            const response = await callGenHumanAPI('/app/human/human/Voice/synthesis', {
+                voice_id: voiceId,
+                text: text
+            });
+            
+            const resultElement = document.getElementById('synthesisResult');
+            const extractElement = document.getElementById('extractedAudioUrl');
+            
+            if (response.success && response.data.code === 200) {
+                const audioUrl = response.data.data.audio_url;
+                workflowData.audioUrl = audioUrl;
+                
+                // 自動填入到步驟4
+                document.getElementById('audioAddress').value = audioUrl;
+                
+                log(`✅ 聲音合成成功！Audio URL: ${audioUrl}`);
+                extractElement.innerHTML = `Audio URL: <span class="font-bold text-blue-600">${audioUrl}</span>`;
+                
+                resultElement.innerHTML = `<pre class="status-success">${JSON.stringify(response.data, null, 2)}</pre>`;
+            } else {
+                log(`❌ 聲音合成失敗: ${JSON.stringify(response.data || response.error)}`);
+                resultElement.innerHTML = `<pre class="status-error">${JSON.stringify(response.data || response.error, null, 2)}</pre>`;
+            }
+        }
+
+        // 步驟3：免費數字人克隆
+        async function testHumanClone() {
+            const humanName = document.getElementById('humanName').value;
+            const imageUrl = document.getElementById('humanImageUrl').value;
+            
+            if (!humanName || !imageUrl) {
+                alert('請填寫角色名稱和照片URL！');
+                return;
+            }
+            
+            log(`👤 步驟3：開始免費數字人克隆`);
+            
+            const response = await callGenHumanAPI('/app/human/human/Index/humanClone', {
+                character_name: humanName,
+                image_url: imageUrl
+            });
+            
+            const resultElement = document.getElementById('humanResult');
+            const extractElement = document.getElementById('extractedHumanId');
+            
+            if (response.success && response.data.code === 200) {
+                const humanId = response.data.data.digital_human_id;
+                workflowData.digitalHumanId = humanId;
+                
+                // 自動填入到步驟4
+                document.getElementById('sceneTaskId').value = humanId;
+                
+                log(`✅ 數字人克隆成功！Digital Human ID: ${humanId}`);
+                extractElement.innerHTML = `Digital Human ID: <span class="font-bold text-purple-600">${humanId}</span>`;
+                
+                resultElement.innerHTML = `<pre class="status-success">${JSON.stringify(response.data, null, 2)}</pre>`;
+            } else {
+                log(`❌ 數字人克隆失敗: ${JSON.stringify(response.data || response.error)}`);
+                resultElement.innerHTML = `<pre class="status-error">${JSON.stringify(response.data || response.error, null, 2)}</pre>`;
+            }
+        }
+
+        // 步驟4：付費數字人合成
+        async function testDigitalHumanSynthesis() {
+            const callbackUrl = document.getElementById('callbackUrl').value;
+            const sceneTaskId = document.getElementById('sceneTaskId').value;
+            const audioAddress = document.getElementById('audioAddress').value;
+            
+            if (!callbackUrl || !sceneTaskId || !audioAddress) {
+                alert('請填寫所有必要參數！');
+                return;
+            }
+            
+            log(`🎬 步驟4：開始付費數字人合成`);
+            
+            const response = await callGenHumanAPI('/app/human/human/Index/created', {
+                callback_url: callbackUrl,
+                scene_task_id: sceneTaskId,
+                audio_address: audioAddress
+            });
+            
+            const resultElement = document.getElementById('finalResult');
+            const extractElement = document.getElementById('extractedTaskId');
+            
+            if (response.success && response.data.code === 200) {
+                const taskId = response.data.data.video_task_id;
+                workflowData.taskId = taskId;
+                
+                // 自動填入到查詢區域
+                document.getElementById('queryTaskId').value = taskId;
+                
+                log(`✅ 數字人合成任務提交成功！Task ID: ${taskId}`);
+                extractElement.innerHTML = `Video Task ID: <span class="font-bold text-red-600">${taskId}</span>`;
+                
+                resultElement.innerHTML = `<pre class="status-success">${JSON.stringify(response.data, null, 2)}</pre>`;
+                
+                // 提示查詢狀態
+                setTimeout(() => {
+                    if (confirm('數字人合成任務已提交！是否立即查詢任務狀態？')) {
+                        queryTaskStatus();
+                    }
+                }, 2000);
+            } else {
+                log(`❌ 數字人合成失敗: ${JSON.stringify(response.data || response.error)}`);
+                resultElement.innerHTML = `<pre class="status-error">${JSON.stringify(response.data || response.error, null, 2)}</pre>`;
+            }
+        }
+
+        // 任務狀態查詢
+        async function queryTaskStatus() {
+            const taskId = document.getElementById('queryTaskId').value;
+            
+            if (!taskId) {
+                alert('請填寫任務ID！');
+                return;
+            }
+            
+            log(`🔍 查詢任務狀態: ${taskId}`);
+            
+            const response = await callGenHumanAPI('/app/human/human/Musetalk/task', {
+                task_id: taskId
+            }, 'GET');
+            
+            const resultElement = document.getElementById('queryResult');
+            
+            if (response.success && response.data.code === 200) {
+                const taskData = response.data.data;
+                const status = taskData.state;
+                
+                let statusText = '';
+                switch(status) {
+                    case 10: statusText = '處理中'; break;
+                    case 20: statusText = '已完成'; break;
+                    case 30: statusText = '失敗'; break;
+                    default: statusText = '未知狀態';
+                }
+                
+                log(`📊 任務狀態: ${statusText} (${status})`);
+                
+                if (status === 20 && taskData.videoUrl) {
+                    log(`🎉 任務完成！視頻URL: ${taskData.videoUrl}`);
+                    resultElement.innerHTML = `<pre class="status-success">${JSON.stringify(response.data, null, 2)}</pre>`;
+                } else if (status === 30) {
+                    log(`❌ 任務失敗`);
+                    resultElement.innerHTML = `<pre class="status-error">${JSON.stringify(response.data, null, 2)}</pre>`;
+                } else {
+                    log(`⏳ 任務仍在處理中，請稍後再查詢`);
+                    resultElement.innerHTML = `<pre class="status-processing">${JSON.stringify(response.data, null, 2)}</pre>`;
+                }
+            } else {
+                log(`❌ 查詢失敗: ${JSON.stringify(response.data || response.error)}`);
+                resultElement.innerHTML = `<pre class="status-error">${JSON.stringify(response.data || response.error, null, 2)}</pre>`;
+            }
+        }
+
+        // 頁面載入完成
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 GenHuman API 測試頁面已載入');
+            log('📋 請按照步驟1→2→3→4的順序進行測試');
+            log('💡 每個步驟的結果會自動填入到下個步驟');
+        });
+    </script>
+</body>
+</html>

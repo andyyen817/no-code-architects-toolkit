@@ -27,7 +27,13 @@ import os
 from services.v1.image.screenshot_webpage import take_screenshot
 from services.authentication import authenticate
 from services.cloud_storage import upload_file
-from playwright.sync_api import sync_playwright
+# Playwright dependencies - conditional import
+try:
+    from playwright.sync_api import sync_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    logger.warning('Playwright not available - screenshot functionality disabled')
 from io import BytesIO
 
 

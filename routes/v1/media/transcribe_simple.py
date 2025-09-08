@@ -108,3 +108,4 @@ def transcribe_media_simple():
         return jsonify({"message": f"Transcription simulation failed: {e}", "status": "error"}), 500
 
 
+

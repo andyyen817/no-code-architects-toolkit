@@ -151,3 +151,4 @@ SELECT '=== 系統配置 ===' AS message;
 SELECT config_key, config_value FROM nca_config;
 
 SELECT 'No-Code Architects Toolkit 數據庫初始化完成！' AS 完成狀態;
+

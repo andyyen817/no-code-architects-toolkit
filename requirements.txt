@@ -21,3 +21,5 @@ matplotlib
 yt-dlp
 pymysql
 jsonschema
+playwright
+google-api-core
