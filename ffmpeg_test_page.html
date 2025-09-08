@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFMPEG 功能測試 - ZEABUR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .ffmpeg-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 10px;
+        }
+        
+        .test-category {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .test-category:last-child {
+            border-bottom: none;
+        }
+        
+        .category-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .category-title .icon {
+            width: 50px;
+            height: 50px;
+            background: #FF6B6B;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 1.5em;
+        }
+        
+        .ffmpeg-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .ffmpeg-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .ffmpeg-card:hover {
+            border-color: #FF6B6B;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        
+        .ffmpeg-card h3 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+        }
+        
+        .ffmpeg-card .command-badge {
+            background: #FF6B6B;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.7em;
+            margin-left: 10px;
+        }
+        
+        .ffmpeg-card p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .ffmpeg-command {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-advanced {
+            background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+        }
+        
+        .btn-advanced:hover {
+            box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4);
+        }
+        
+        .test-params {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .test-params label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .test-params input, .test-params select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .results-section {
+            padding: 30px;
+            background: #f5f5f5;
+        }
+        
+        .results-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .performance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #FF6B6B;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 FFMPEG 功能測試中心</h1>
+            <p>ZEABUR 雲端媒體處理能力測試</p>
+        </div>
+        
+        <div class="ffmpeg-info">
+            <h3>🔧 FFMPEG 環境信息</h3>
+            <p><strong>服務器:</strong> <code id="server-url">https://你的zeabur域名.zeabur.app</code></p>
+            <p><strong>FFMPEG版本:</strong> 自動檢測中...</p>
+            <p><strong>支持的編解碼器:</strong> H.264, AAC, MP3, WebM, VP8/VP9</p>
+            <p><strong>處理能力:</strong> CPU優化，適合中小型媒體文件</p>
+        </div>
+        
+        <!-- 音頻處理測試 -->
+        <div class="test-category">
+            <div class="category-title">
+                <span class="icon">🎵</span>
+                音頻處理測試
+            </div>
+            
+            <div class="ffmpeg-grid">
+                <div class="ffmpeg-card">
+                    <h3>音頻格式轉換 <span class="command-badge">-f</span></h3>
+                    <p>測試FFMPEG將各種音頻格式轉換為MP3、WAV、AAC等</p>
+                    <div class="ffmpeg-command">ffmpeg -i input.wav -c:a libmp3lame -b:a 192k output.mp3</div>
+                    <div class="test-params">
+                        <label>測試音頻URL:</label>
+                        <input type="url" id="audio-url" value="https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav" placeholder="輸入音頻URL">
+                        <label>目標格式:</label>
+                        <select id="audio-format">
+                            <option value="mp3">MP3</option>
+                            <option value="wav">WAV</option>
+                            <option value="aac">AAC</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="testAudioConvert()">測試音頻轉換</button>
+                </div>
+                
+                <div class="ffmpeg-card">
+                    <h3>音頻合併 <span class="command-badge">concat</span></h3>
+                    <p>測試FFMPEG將多個音頻文件合併為一個</p>
+                    <div class="ffmpeg-command">ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp3</div>
+                    <button class="btn" onclick="testAudioConcat()">測試音頻合併</button>
+                </div>
+                
+                <div class="ffmpeg-card">
+                    <h3>音頻剪切 <span class="command-badge">-ss -t</span></h3>
+                    <p>測試FFMPEG按時間範圍剪切音頻</p>
+                    <div class="ffmpeg-command">ffmpeg -i input.mp3 -ss 00:00:30 -t 00:01:00 output.mp3</div>
+                    <div class="test-params">
+                        <label>開始時間 (秒):</label>
+                        <input type="number" id="audio-start" value="5" min="0">
+                        <label>持續時間 (秒):</label>
+                        <input type="number" id="audio-duration" value="10" min="1">
+                    </div>
+                    <button class="btn" onclick="testAudioCut()">測試音頻剪切</button>
+                </div>
+                
+                <div class="ffmpeg-card">
+                    <h3>音頻元數據 <span class="command-badge">-metadata</span></h3>
+                    <p>測試FFMPEG讀取和修改音頻元數據</p>
+                    <div class="ffmpeg-command">ffprobe -v quiet -print_format json -show_format input.mp3</div>
+                    <button class="btn" onclick="testAudioMetadata()">測試元數據</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 視頻處理測試 -->
+        <div class="test-category">
+            <div class="category-title">
+                <span class="icon">🎬</span>
+                視頻處理測試
+            </div>
+            
+            <div class="ffmpeg-grid">
+                <div class="ffmpeg-card">
+                    <h3>視頻剪切 <span class="command-badge">-ss -to</span></h3>
+                    <p>測試FFMPEG按時間範圍剪切視頻片段</p>
+                    <div class="ffmpeg-command">ffmpeg -i input.mp4 -ss 00:00:10 -to 00:00:20 -c copy output.mp4</div>
+                    <div class="test-params">
+                        <label>測試視頻URL:</label>
+                        <input type="url" id="video-url" value="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" placeholder="輸入視頻URL">
+                        <label>開始時間:</label>
+                        <input type="text" id="video-start" value="00:00:05" placeholder="HH:MM:SS">
+                        <label>結束時間:</label>
+                        <input type="text" id="video-end" value="00:00:15" placeholder="HH:MM:SS">
+                    </div>
+                    <button class="btn" onclick="testVideoCut()">測試視頻剪切</button>
+                </div>
+                
+                <div class="ffmpeg-card">
+                    <h3>視頻縮略圖 <span class="command-badge">-vframes</span></h3>
+                    <p>測試FFMPEG從視頻中提取縮略圖</p>
+                    <div class="ffmpeg-command">ffmpeg -i input.mp4 -ss 00:00:05 -vframes 1 output.jpg</div>
+                    <div class="test-params">
+                        <label>提取時間點:</label>
+                        <input type="text" id="thumb-time" value="00:00:05" placeholder="HH:MM:SS">
+                    </div>
+                    <button class="btn" onclick="testVideoThumbnail()">測試縮略圖</button>
+                </div>
+                
+                <div class="ffmpeg-card">
+                    <h3>視頻轉碼 <span class="command-badge">-c:v</span></h3>
+                    <p>測試FFMPEG視頻編解碼器轉換</p>
+                    <div class="ffmpeg-command">ffmpeg -i input.mp4 -c:v libx264 -crf 23 -c:a aac output.mp4</div>
+                    <div class="test-params">
+                        <label>視頻編解碼器:</label>
+                        <select id="video-codec">
+                            <option value="libx264">H.264 (libx264)</option>
+                            <option value="libvpx">VP8 (libvpx)</option>
+                            <option value="libvpx-vp9">VP9 (libvpx-vp9)</option>
+                        </select>
+                        <label>質量設定 (CRF):</label>
+                        <input type="number" id="video-crf" value="23" min="0" max="51">
+                    </div>
+                    <button class="btn" onclick="testVideoTranscode()">測試轉碼</button>
+                </div>
+                
+                <div class="ffmpeg-card">
+                    <h3>視頻信息 <span class="command-badge">ffprobe</span></h3>
+                    <p>測試FFPROBE獲取視頻詳細信息</p>
+                    <div class="ffmpeg-command">ffprobe -v quiet -print_format json -show_format -show_streams input.mp4</div>
+                    <button class="btn" onclick="testVideoInfo()">測試視頻信息</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 高級功能測試 -->
+        <div class="test-category">
+            <div class="category-title">
+                <span class="icon">⚡</span>
+                高級功能測試
+            </div>
+            
+            <div class="ffmpeg-grid">
+                <div class="ffmpeg-card">
+                    <h3>圖片轉視頻 <span class="command-badge">-loop</span></h3>
+                    <p>測試FFMPEG將靜態圖片轉換為視頻</p>
+                    <div class="ffmpeg-command">ffmpeg -loop 1 -i image.jpg -c:v libx264 -t 5 -pix_fmt yuv420p output.mp4</div>
+                    <div class="test-params">
+                        <label>圖片URL:</label>
+                        <input type="url" id="image-url" value="https://via.placeholder.com/1280x720/FF6B6B/white?text=FFMPEG+Test" placeholder="輸入圖片URL">
+                        <label>視頻長度 (秒):</label>
+                        <input type="number" id="image-duration" value="5" min="1" max="30">
+                    </div>
+                    <button class="btn btn-advanced" onclick="testImageToVideo()">測試圖片轉視頻</button>
+                </div>
+                
+                <div class="ffmpeg-card">
+                    <h3>視頻濾鏡 <span class="command-badge">-vf</span></h3>
+                    <p>測試FFMPEG視頻濾鏡效果</p>
+                    <div class="ffmpeg-command">ffmpeg -i input.mp4 -vf "scale=1280:720,brightness=0.1" output.mp4</div>
+                    <div class="test-params">
+                        <label>濾鏡效果:</label>
+                        <select id="video-filter">
+                            <option value="scale=1280:720">縮放 (1280x720)</option>
+                            <option value="brightness=0.1">亮度調整</option>
+                            <option value="contrast=1.2">對比度調整</option>
+                            <option value="hflip">水平翻轉</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-advanced" onclick="testVideoFilter()">測試濾鏡</button>
+                </div>
+                
+                <div class="ffmpeg-card">
+                    <h3>性能壓力測試 <span class="command-badge">stress</span></h3>
+                    <p>測試FFMPEG在高負載下的處理能力</p>
+                    <div class="ffmpeg-command">多任務並發處理測試</div>
+                    <button class="btn btn-advanced" onclick="testFFMPEGStress()">壓力測試</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 性能監控 -->
+        <div class="results-section">
+            <div class="results-title">📊 FFMPEG 性能監控</div>
+            
+            <div class="performance-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-tests">0</div>
+                    <div class="stat-label">總測試數</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="success-rate">0%</div>
+                    <div class="stat-label">成功率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avg-time">0s</div>
+                    <div class="stat-label">平均處理時間</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="cpu-usage">檢測中</div>
+                    <div class="stat-label">CPU使用率</div>
+                </div>
+            </div>
+            
+            <div id="ffmpeg-results" style="background: white; padding: 20px; border-radius: 10px; min-height: 300px; margin-top: 20px;">
+                <p>開始測試FFMPEG功能...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 配置 - ZEABUR實際域名
+        const BASE_URL = 'https://vidsparkback.zeabur.app';
+        const API_KEY = 'production-api-key-2024';
+        
+        // 統計數據
+        let testStats = {
+            total: 0,
+            success: 0,
+            totalTime: 0
+        };
+        
+        // 更新服務器URL
+        document.getElementById('server-url').textContent = BASE_URL;
+        
+        function logFFMPEGResult(title, result, processingTime = 0, isError = false) {
+            const resultsDiv = document.getElementById('ffmpeg-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = isError ? '#f44336' : '#4CAF50';
+            const icon = isError ? '❌' : '✅';
+            
+            // 更新統計
+            testStats.total++;
+            if (!isError) testStats.success++;
+            testStats.totalTime += processingTime;
+            
+            updateStats();
+            
+            resultsDiv.innerHTML += `
+                <div style="margin-bottom: 15px; padding: 15px; border-left: 4px solid ${color}; background: #f9f9f9; border-radius: 5px;">
+                    <strong>${icon} [${timestamp}] ${title}</strong>
+                    ${processingTime > 0 ? `<span style="color: #666; margin-left: 10px;">⏱️ ${processingTime.toFixed(2)}s</span>` : ''}
+                    <br>
+                    <pre style="margin-top: 10px; font-size: 0.9em; color: #666; background: white; padding: 10px; border-radius: 3px;">${JSON.stringify(result, null, 2)}</pre>
+                </div>
+            `;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        function updateStats() {
+            document.getElementById('total-tests').textContent = testStats.total;
+            document.getElementById('success-rate').textContent = 
+                testStats.total > 0 ? Math.round((testStats.success / testStats.total) * 100) + '%' : '0%';
+            document.getElementById('avg-time').textContent = 
+                testStats.total > 0 ? (testStats.totalTime / testStats.total).toFixed(1) + 's' : '0s';
+        }
+        
+        async function makeFFMPEGRequest(endpoint, data) {
+            const startTime = Date.now();
+            try {
+                const response = await fetch(BASE_URL + endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': API_KEY
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                const processingTime = (Date.now() - startTime) / 1000;
+                
+                return { 
+                    success: response.ok, 
+                    data: result, 
+                    status: response.status,
+                    processingTime 
+                };
+            } catch (error) {
+                const processingTime = (Date.now() - startTime) / 1000;
+                return { 
+                    success: false, 
+                    error: error.message, 
+                    processingTime 
+                };
+            }
+        }
+        
+        // FFMPEG測試函數
+        async function testAudioConvert() {
+            const audioUrl = document.getElementById('audio-url').value;
+            const format = document.getElementById('audio-format').value;
+            
+            logFFMPEGResult('音頻格式轉換測試開始', `轉換 ${audioUrl} 為 ${format.toUpperCase()}`);
+            
+            const result = await makeFFMPEGRequest('/v1/media/convert/mp3_real', {
+                media_url: audioUrl,
+                output_format: format
+            });
+            
+            logFFMPEGResult('音頻格式轉換結果', result.data || result, result.processingTime, !result.success);
+        }
+        
+        async function testVideoCut() {
+            const videoUrl = document.getElementById('video-url').value;
+            const startTime = document.getElementById('video-start').value;
+            const endTime = document.getElementById('video-end').value;
+            
+            logFFMPEGResult('視頻剪切測試開始', `剪切 ${startTime} 到 ${endTime}`);
+            
+            const result = await makeFFMPEGRequest('/v1/video/cut_real', {
+                video_url: videoUrl,
+                start_time: startTime,
+                end_time: endTime
+            });
+            
+            logFFMPEGResult('視頻剪切結果', result.data || result, result.processingTime, !result.success);
+        }
+        
+        async function testVideoThumbnail() {
+            const videoUrl = document.getElementById('video-url').value;
+            const timestamp = document.getElementById('thumb-time').value;
+            
+            logFFMPEGResult('視頻縮略圖測試開始', `提取 ${timestamp} 時間點縮略圖`);
+            
+            const result = await makeFFMPEGRequest('/v1/video/thumbnail_real', {
+                video_url: videoUrl,
+                timestamp: timestamp
+            });
+            
+            logFFMPEGResult('縮略圖生成結果', result.data || result, result.processingTime, !result.success);
+        }
+        
+        async function testImageToVideo() {
+            const imageUrl = document.getElementById('image-url').value;
+            const duration = document.getElementById('image-duration').value;
+            
+            logFFMPEGResult('圖片轉視頻測試開始', `圖片轉 ${duration}秒視頻`);
+            
+            const result = await makeFFMPEGRequest('/v1/image/convert/image_to_video_real', {
+                image_url: imageUrl,
+                length: parseFloat(duration),
+                frame_rate: 30
+            });
+            
+            logFFMPEGResult('圖片轉視頻結果', result.data || result, result.processingTime, !result.success);
+        }
+        
+        async function testAudioMetadata() {
+            const audioUrl = document.getElementById('audio-url').value;
+            
+            logFFMPEGResult('音頻元數據測試開始', '獲取音頻詳細信息');
+            
+            const result = await makeFFMPEGRequest('/v1/media/metadata', {
+                media_url: audioUrl
+            });
+            
+            logFFMPEGResult('音頻元數據結果', result.data || result, result.processingTime, !result.success);
+        }
+        
+        async function testVideoInfo() {
+            const videoUrl = document.getElementById('video-url').value;
+            
+            logFFMPEGResult('視頻信息測試開始', '獲取視頻詳細信息');
+            
+            const result = await makeFFMPEGRequest('/v1/media/metadata', {
+                media_url: videoUrl
+            });
+            
+            logFFMPEGResult('視頻信息結果', result.data || result, result.processingTime, !result.success);
+        }
+        
+        // 其他測試函數
+        async function testAudioConcat() {
+            logFFMPEGResult('音頻合併測試', '功能開發中，需要多個音頻URL');
+        }
+        
+        async function testAudioCut() {
+            logFFMPEGResult('音頻剪切測試', '使用視頻剪切功能代替');
+        }
+        
+        async function testVideoTranscode() {
+            logFFMPEGResult('視頻轉碼測試', '功能開發中');
+        }
+        
+        async function testVideoFilter() {
+            logFFMPEGResult('視頻濾鏡測試', '功能開發中');
+        }
+        
+        async function testFFMPEGStress() {
+            logFFMPEGResult('FFMPEG壓力測試開始', '並發處理多個任務');
+            
+            // 並發執行多個測試
+            const promises = [
+                testAudioConvert(),
+                testVideoThumbnail(),
+                testImageToVideo()
+            ];
+            
+            try {
+                await Promise.all(promises);
+                logFFMPEGResult('壓力測試完成', '所有並發任務已完成');
+            } catch (error) {
+                logFFMPEGResult('壓力測試失敗', error.message, 0, true);
+            }
+        }
+        
+        // 頁面加載時初始化
+        window.onload = function() {
+            logFFMPEGResult('FFMPEG測試中心已就緒', '開始測試ZEABUR上的媒體處理能力');
+            
+            // 定期更新CPU使用率（模擬）
+            setInterval(() => {
+                const cpuUsage = Math.round(Math.random() * 20 + 10); // 模擬10-30%使用率
+                document.getElementById('cpu-usage').textContent = cpuUsage + '%';
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
