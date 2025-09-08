@@ -19,7 +19,7 @@ API_KEY=production-api-key-2024
 LOCAL_STORAGE_PATH=/app/output
 DEBUG=false
 FLASK_ENV=production
-SECRET_KEY=your-secret-key-here-change-this
+SECRET_KEY=nCa2025$K8mQ9#xR7vL3@pY6wE4tU1zA9sN5bM2dF8cH6jG
 
 # Python運行環境
 PYTHONUNBUFFERED=1
@@ -78,13 +78,13 @@ GENHUMAN_MAX_RETRIES=3
 
 ### **1. 數據庫連接配置**
 ```bash
-# MySQL連接配置（使用現有ZEABUR MySQL）
+# MySQL連接配置（使用獨立ZEABUR MySQL實例）
 DB_CONNECTION=mysql
-DB_HOST=mysql.zeabur.internal
-DB_PORT=3306
-DB_DATABASE=nocode_architects_backend
+DB_HOST=tpe1.clusters.zeabur.com
+DB_PORT=30791
+DB_DATABASE=zeabur
 DB_USERNAME=root
-DB_PASSWORD=fhlkzgNuRQL79C5eFb4036vX2T18YdAn
+DB_PASSWORD=248s1xp5zOiwdLe0MqGQ3W7nTE9YZVh6
 DB_CHARSET=utf8mb4
 DB_COLLATION=utf8mb4_unicode_ci
 ```
@@ -136,6 +136,10 @@ DB_AUTO_RECONNECT=true
 變量名: FLASK_ENV
 變量值: production
 
+變量名: SECRET_KEY
+變量值: nCa2025$K8mQ9#xR7vL3@pY6wE4tU1zA9sN5bM2dF8cH6jG
+說明: Flask安全密鑰，用於Session加密和CSRF保護，請使用強隨機字符串
+
 變量名: PYTHONUNBUFFERED
 變量值: 1
 
@@ -171,19 +175,19 @@ DB_AUTO_RECONNECT=true
 變量值: mysql
 
 變量名: DB_HOST
-變量值: mysql.zeabur.internal
+變量值: tpe1.clusters.zeabur.com
 
 變量名: DB_PORT
-變量值: 3306
+變量值: 30791
 
 變量名: DB_DATABASE
-變量值: nocode_architects_backend
+變量值: zeabur
 
 變量名: DB_USERNAME
 變量值: root
 
 變量名: DB_PASSWORD
-變量值: fhlkzgNuRQL79C5eFb4036vX2T18YdAn
+變量值: 248s1xp5zOiwdLe0MqGQ3W7nTE9YZVh6
 
 變量名: DB_CHARSET
 變量值: utf8mb4
@@ -239,20 +243,18 @@ DB_AUTO_RECONNECT=true
 
 #### **步驟1: 連接測試**
 ```bash
-# 在ZEABUR應用中測試連接
-mysql -h mysql.zeabur.internal -u root -pfhlkzgNuRQL79C5eFb4036vX2T18YdAn -P 3306
+# 使用你的ZEABUR MySQL連接信息
+mysqlsh --sql --host=tpe1.clusters.zeabur.com --port=30791 --user=root --password=248s1xp5zOiwdLe0MqGQ3W7nTE9YZVh6 --schema=zeabur
 ```
 
-#### **步驟2: 創建後端數據庫**
+#### **步驟2: 確認數據庫**
 ```sql
--- 創建後端專用數據庫
-CREATE DATABASE `nocode_architects_backend` 
-CHARACTER SET utf8mb4 
-COLLATE utf8mb4_unicode_ci;
-
--- 確認創建成功
+-- 確認當前數據庫
 SHOW DATABASES;
-USE nocode_architects_backend;
+USE zeabur;
+
+-- 檢查當前表格
+SHOW TABLES;
 ```
 
 #### **步驟3: 創建數據表**

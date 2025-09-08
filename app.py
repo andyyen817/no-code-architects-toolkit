@@ -26,6 +26,7 @@ import os
 import time
 from version import BUILD_NUMBER  # Import the BUILD_NUMBER
 from app_utils import log_job_status, discover_and_register_blueprints  # Import the discover_and_register_blueprints function
+from test_routes import register_test_routes  # Import test routes
 
 MAX_QUEUE_LENGTH = int(os.environ.get('MAX_QUEUE_LENGTH', 0))
 
@@ -199,6 +200,9 @@ def create_app():
     
     # Use the discover_and_register_blueprints function to register all blueprints
     discover_and_register_blueprints(app)
+    
+    # Register test routes
+    register_test_routes(app)
 
     # Add health check endpoint for Zeabur
     @app.route('/health')

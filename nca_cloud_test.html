@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No-Code Architects Toolkit 雲端測試頁面</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f6fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .test-section { 
+            background: white;
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .test-section:hover {
+            transform: translateY(-5px);
+        }
+        .test-section h3 { 
+            color: #2c3e50; 
+            margin-top: 0; 
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .form-group { 
+            margin: 15px 0; 
+        }
+        .form-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            color: #34495e;
+        }
+        .form-group input, .form-group textarea, .form-group select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e1e8ed; 
+            border-radius: 8px; 
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .btn { 
+            padding: 12px 24px; 
+            background: linear-gradient(135deg, #3498db, #2980b9); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin: 8px 5px; 
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn:hover { 
+            background: linear-gradient(135deg, #2980b9, #1abc9c); 
+            transform: translateY(-2px);
+        }
+        .btn:disabled { 
+            background: #bdc3c7; 
+            cursor: not-allowed; 
+            transform: none;
+        }
+        .btn-success { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .btn-danger { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-warning { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        
+        .result { 
+            margin-top: 20px; 
+            padding: 15px; 
+            border-radius: 8px; 
+            white-space: pre-wrap; 
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .success { 
+            background: #d5f4e6; 
+            border: 2px solid #27ae60; 
+            color: #1e8449; 
+        }
+        .error { 
+            background: #fadbd8; 
+            border: 2px solid #e74c3c; 
+            color: #a93226; 
+        }
+        .log { 
+            background: #f8f9fa; 
+            border: 2px solid #dee2e6; 
+            color: #495057; 
+            max-height: 300px; 
+            overflow-y: auto;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-healthy { background: #27ae60; }
+        .status-error { background: #e74c3c; }
+        .status-testing { background: #f39c12; animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .stats-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛠️ No-Code Architects Toolkit 雲端測試中心</h1>
+        <p>ZEABUR部署環境 | 完整功能測試 | MySQL數據持久化</p>
+        <div>
+            <span class="status-indicator" id="serverStatus"></span>
+            <span id="serverStatusText">正在檢查服務器狀態...</span>
+        </div>
+    </div>
+
+    <!-- 測試統計面板 -->
+    <div class="stats-panel">
+        <h3>📊 測試統計</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number" id="totalTests">0</div>
+                <div class="stat-label">總測試數</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="successTests">0</div>
+                <div class="stat-label">成功</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="failedTests">0</div>
+                <div class="stat-label">失敗</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="avgTime">0ms</div>
+                <div class="stat-label">平均響應時間</div>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="successRate" style="width: 0%"></div>
+        </div>
+        <div style="text-align: center; margin-top: 10px;">
+            成功率: <span id="successRateText">0%</span>
+        </div>
+    </div>
+
+    <!-- 測試功能網格 -->
+    <div class="test-grid">
+        <!-- 音頻處理測試 -->
+        <div class="test-section">
+            <h3>🎵 音頻處理測試</h3>
+            
+            <div class="form-group">
+                <label>選擇音頻文件：</label>
+                <input type="file" id="audioFile" accept="audio/*">
+            </div>
+            
+            <div class="form-group">
+                <label>輸出格式：</label>
+                <select id="audioFormat">
+                    <option value="mp3">MP3</option>
+                    <option value="wav">WAV</option>
+                    <option value="aac">AAC</option>
+                    <option value="flac">FLAC</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>音頻質量：</label>
+                <select id="audioQuality">
+                    <option value="high">高質量</option>
+                    <option value="medium">中等質量</option>
+                    <option value="low">低質量</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="testAudioConvert()">🔄 測試音頻轉換</button>
+            <button class="btn btn-success" onclick="testAudioTranscribe()">📝 測試音頻轉錄</button>
+            
+            <div id="audioResult" class="result"></div>
+            <div id="audioLog" class="result log"></div>
+        </div>
+
+        <!-- 視頻處理測試 -->
+        <div class="test-section">
+            <h3>🎬 視頻處理測試</h3>
+            
+            <div class="form-group">
+                <label>選擇視頻文件：</label>
+                <input type="file" id="videoFile" accept="video/*">
+            </div>
+            
+            <div class="form-group">
+                <label>或者輸入視頻URL：</label>
+                <input type="url" id="videoUrl" placeholder="https://example.com/video.mp4">
+            </div>
+            
+            <div class="form-group">
+                <label>處理類型：</label>
+                <select id="videoOperation">
+                    <option value="convert">格式轉換</option>
+                    <option value="resize">分辨率調整</option>
+                    <option value="trim">視頻剪切</option>
+                    <option value="extract_audio">提取音頻</option>
+                    <option value="thumbnail">生成縮略圖</option>
+                    <option value="caption">生成字幕</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>輸出設置：</label>
+                <input type="text" id="videoSettings" placeholder="如：720p, 00:10-00:30等">
+            </div>
+            
+            <button class="btn" onclick="testVideoProcess()">🎥 測試視頻處理</button>
+            <button class="btn btn-warning" onclick="testVideoCaption()">📋 測試影片字幕</button>
+            
+            <div id="videoResult" class="result"></div>
+            <div id="videoLog" class="result log"></div>
+        </div>
+
+        <!-- 圖像處理測試 -->
+        <div class="test-section">
+            <h3>🖼️ 圖像處理測試</h3>
+            
+            <div class="form-group">
+                <label>選擇圖片文件：</label>
+                <input type="file" id="imageFile" accept="image/*">
+            </div>
+            
+            <div class="form-group">
+                <label>處理類型：</label>
+                <select id="imageOperation">
+                    <option value="resize">尺寸調整</option>
+                    <option value="convert">格式轉換</option>
+                    <option value="compress">壓縮優化</option>
+                    <option value="watermark">添加水印</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>輸出設置：</label>
+                <input type="text" id="imageSettings" placeholder="如：800x600, quality=80等">
+            </div>
+            
+            <button class="btn" onclick="testImageProcess()">📸 測試圖像處理</button>
+            <button class="btn btn-success" onclick="testImageAnalyze()">🔍 測試圖像分析</button>
+            
+            <div id="imageResult" class="result"></div>
+            <div id="imageLog" class="result log"></div>
+        </div>
+
+        <!-- 文件管理測試 -->
+        <div class="test-section">
+            <h3>📁 文件管理測試</h3>
+            
+            <div class="form-group">
+                <label>選擇任意文件：</label>
+                <input type="file" id="anyFile">
+            </div>
+            
+            <div class="form-group">
+                <label>上傳方式：</label>
+                <select id="uploadMethod">
+                    <option value="base64">Base64上傳</option>
+                    <option value="form">表單上傳</option>
+                    <option value="chunk">分片上傳</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>存儲類型：</label>
+                <select id="storageType">
+                    <option value="temporary">臨時存儲</option>
+                    <option value="permanent">永久存儲</option>
+                    <option value="archive">歸檔存儲</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="testFileUpload()">📤 測試文件上傳</button>
+            <button class="btn btn-warning" onclick="testFileList()">📋 測試文件列表</button>
+            <button class="btn btn-danger" onclick="testFileDelete()">🗑️ 測試文件刪除</button>
+            
+            <div id="fileResult" class="result"></div>
+            <div id="fileLog" class="result log"></div>
+        </div>
+
+        <!-- 工具包功能測試 -->
+        <div class="test-section">
+            <h3>🔧 工具包功能測試</h3>
+            
+            <div class="form-group">
+                <label>文本內容：</label>
+                <textarea id="textContent" rows="3" placeholder="輸入要處理的文本內容"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>處理類型：</label>
+                <select id="textOperation">
+                    <option value="translate">文本翻譯</option>
+                    <option value="summarize">內容摘要</option>
+                    <option value="sentiment">情感分析</option>
+                    <option value="extract">關鍵詞提取</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>目標語言：</label>
+                <select id="targetLanguage">
+                    <option value="en">English</option>
+                    <option value="zh">中文</option>
+                    <option value="ja">日本語</option>
+                    <option value="ko">한국어</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="testTextProcess()">📝 測試文本處理</button>
+            <button class="btn btn-success" onclick="testAPIHealth()">❤️ 測試API健康</button>
+            
+            <div id="toolkitResult" class="result"></div>
+            <div id="toolkitLog" class="result log"></div>
+        </div>
+
+        <!-- 批量測試面板 -->
+        <div class="test-section">
+            <h3>⚡ 批量測試面板</h3>
+            
+            <div class="form-group">
+                <label>測試套件：</label>
+                <select id="testSuite">
+                    <option value="basic">基礎功能測試</option>
+                    <option value="performance">性能壓力測試</option>
+                    <option value="integration">集成測試</option>
+                    <option value="all">全面測試</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>並發數量：</label>
+                <select id="concurrency">
+                    <option value="1">單線程</option>
+                    <option value="3">3並發</option>
+                    <option value="5">5並發</option>
+                    <option value="10">10並發</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-success" onclick="runBatchTest()">🚀 運行批量測試</button>
+            <button class="btn btn-warning" onclick="runStressTest()">⚡ 壓力測試</button>
+            <button class="btn btn-danger" onclick="stopAllTests()">🛑 停止所有測試</button>
+            <button class="btn" onclick="clearAllLogs()">🗑️ 清空所有日誌</button>
+            
+            <div id="batchResult" class="result"></div>
+            <div id="batchLog" class="result log"></div>
+        </div>
+    </div>
+
+    <script>
+        // 全局變量
+        const BASE_URL = 'https://vidsparkback.zeabur.app';
+        let testStats = {
+            total: 0,
+            success: 0,
+            failed: 0,
+            times: []
+        };
+        let currentTestSession = null;
+
+        // 初始化頁面
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 No-Code Architects Toolkit 雲端測試中心已加載');
+            log('🌐 測試環境: ' + BASE_URL);
+            checkServerHealth();
+            loadTestHistory();
+        });
+
+        // 通用日誌函數
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            
+            // 輸出到控制台
+            console.log(`[NCA Cloud Test] ${message}`);
+            
+            // 輸出到各個日誌區域
+            const logElements = ['audioLog', 'videoLog', 'imageLog', 'fileLog', 'toolkitLog', 'batchLog'];
+            logElements.forEach(logId => {
+                const element = document.getElementById(logId);
+                if (element) {
+                    element.textContent += logMessage + '\n';
+                    element.scrollTop = element.scrollHeight;
+                }
+            });
+        }
+
+        // 顯示結果
+        function showResult(elementId, message, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.className = isSuccess ? 'result success' : 'result error';
+            }
+        }
+
+        // 更新測試統計
+        function updateStats(success, responseTime) {
+            testStats.total++;
+            if (success) testStats.success++;
+            else testStats.failed++;
+            testStats.times.push(responseTime);
+
+            // 更新顯示
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('successTests').textContent = testStats.success;
+            document.getElementById('failedTests').textContent = testStats.failed;
+            
+            const avgTime = testStats.times.reduce((a, b) => a + b, 0) / testStats.times.length;
+            document.getElementById('avgTime').textContent = Math.round(avgTime) + 'ms';
+            
+            const successRate = testStats.total > 0 ? (testStats.success / testStats.total * 100) : 0;
+            document.getElementById('successRate').style.width = successRate + '%';
+            document.getElementById('successRateText').textContent = successRate.toFixed(1) + '%';
+        }
+
+        // 檢查服務器健康狀態
+        async function checkServerHealth() {
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${BASE_URL}/health`);
+                const responseTime = Date.now() - startTime;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('serverStatus').className = 'status-indicator status-healthy';
+                    document.getElementById('serverStatusText').textContent = `服務器正常 (${responseTime}ms)`;
+                    log(`✅ 服務器健康檢查通過: ${JSON.stringify(data)}`);
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('serverStatus').className = 'status-indicator status-error';
+                document.getElementById('serverStatusText').textContent = '服務器異常';
+                log(`❌ 服務器健康檢查失敗: ${error.message}`);
+            }
+        }
+
+        // 創建測試會話
+        async function createTestSession(description) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/test/session/create`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_name: `雲端測試_${new Date().toLocaleString()}`,
+                        description: description
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    currentTestSession = result.session_id;
+                    log(`📋 測試會話創建成功: ${currentTestSession}`);
+                }
+                return result;
+            } catch (error) {
+                log(`❌ 測試會話創建失敗: ${error.message}`);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // 記錄測試結果到數據庫
+        async function recordTestResult(testType, testFunction, endpoint, inputData, outputData, status, executionTime, errorMessage = null) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/test/record`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        test_type: testType,
+                        test_function: testFunction,
+                        test_endpoint: endpoint,
+                        input_data: inputData,
+                        output_data: outputData,
+                        test_status: status,
+                        execution_time_ms: executionTime,
+                        error_message: errorMessage,
+                        session_id: currentTestSession
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    log(`💾 測試結果已保存到數據庫: 記錄ID ${result.record_id}`);
+                }
+                return result;
+            } catch (error) {
+                log(`❌ 測試結果保存失敗: ${error.message}`);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // 音頻轉換測試
+        async function testAudioConvert() {
+            const fileInput = document.getElementById('audioFile');
+            const format = document.getElementById('audioFormat').value;
+            const quality = document.getElementById('audioQuality').value;
+            
+            if (!fileInput.files[0]) {
+                showResult('audioResult', '請先選擇音頻文件！', false);
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            log(`🎵 開始音頻轉換測試: ${file.name} -> ${format}`);
+            
+            try {
+                const startTime = Date.now();
+                const formData = new FormData();
+                formData.append('audio', file);
+                formData.append('format', format);
+                formData.append('quality', quality);
+                
+                const response = await fetch(`${BASE_URL}/v1/audio/convert`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ 音頻轉換成功！用時: ${responseTime}ms`);
+                    log(`🔗 輸出文件: ${result.output_url}`);
+                    showResult('audioResult', `轉換成功！\n輸出格式: ${format}\n文件URL: ${result.output_url}\n處理時間: ${responseTime}ms`);
+                    
+                    await recordTestResult('nca_toolkit', 'audio_convert', '/v1/audio/convert', 
+                        {filename: file.name, format, quality}, result, 'success', responseTime);
+                    updateStats(true, responseTime);
+                } else {
+                    throw new Error(result.error || '轉換失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ 音頻轉換失敗: ${error.message}`);
+                showResult('audioResult', `轉換失敗: ${error.message}`, false);
+                
+                await recordTestResult('nca_toolkit', 'audio_convert', '/v1/audio/convert', 
+                    {filename: file.name, format, quality}, null, 'failed', responseTime, error.message);
+                updateStats(false, responseTime);
+            }
+        }
+
+        // 音頻轉錄測試（問題二解答）
+        async function testAudioTranscribe() {
+            const fileInput = document.getElementById('audioFile');
+            
+            if (!fileInput.files[0]) {
+                showResult('audioResult', '請先選擇音頻文件！', false);
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            log(`📝 開始音頻轉錄測試: ${file.name}`);
+            log(`🎯 測試端點: /v1/media/transcribe`);
+            
+            try {
+                const startTime = Date.now();
+                const formData = new FormData();
+                formData.append('media', file);
+                formData.append('language', 'zh');
+                formData.append('model_size', 'tiny');
+                
+                const response = await fetch(`${BASE_URL}/v1/media/transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ 音頻轉錄成功！用時: ${responseTime}ms`);
+                    log(`📝 轉錄文本: ${result.text}`);
+                    showResult('audioResult', `轉錄成功！\n文本內容: ${result.text}\n處理時間: ${responseTime}ms`);
+                    
+                    // 保存Whisper轉錄結果到專用表
+                    await recordWhisperResult('audio', file.name, result.text, responseTime);
+                    updateStats(true, responseTime);
+                } else {
+                    throw new Error(result.error || '轉錄失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ 音頻轉錄失敗: ${error.message}`);
+                showResult('audioResult', `轉錄失敗: ${error.message}`, false);
+                updateStats(false, responseTime);
+            }
+        }
+
+        // 影片字幕測試（問題二解答）
+        async function testVideoCaption() {
+            const videoUrl = document.getElementById('videoUrl').value;
+            const fileInput = document.getElementById('videoFile');
+            
+            let mediaSource = null;
+            let mediaName = '';
+            
+            if (videoUrl) {
+                mediaSource = videoUrl;
+                mediaName = videoUrl.split('/').pop();
+            } else if (fileInput.files[0]) {
+                // 先上傳文件獲取URL
+                const file = fileInput.files[0];
+                log(`📤 先上傳視頻文件: ${file.name}`);
+                
+                const uploadResult = await uploadFileToServer(file);
+                if (!uploadResult.success) {
+                    showResult('videoResult', '文件上傳失敗！', false);
+                    return;
+                }
+                mediaSource = uploadResult.file_url;
+                mediaName = file.name;
+            } else {
+                showResult('videoResult', '請選擇視頻文件或輸入視頻URL！', false);
+                return;
+            }
+            
+            log(`📋 開始影片字幕生成測試: ${mediaName}`);
+            log(`🎯 測試端點: /v1/video/caption`);
+            log(`🔗 視頻URL: ${mediaSource}`);
+            
+            try {
+                const startTime = Date.now();
+                
+                const response = await fetch(`${BASE_URL}/v1/video/caption`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        video_url: mediaSource,
+                        language: 'zh',
+                        model_size: 'tiny',
+                        format: 'srt'
+                    })
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ 影片字幕生成成功！用時: ${responseTime}ms`);
+                    log(`📋 字幕文件: ${result.subtitle_url}`);
+                    showResult('videoResult', `字幕生成成功！\n字幕文件: ${result.subtitle_url}\n處理時間: ${responseTime}ms`);
+                    
+                    // 保存Whisper字幕結果到專用表
+                    await recordWhisperResult('video', mediaSource, result.subtitle_content, responseTime, result.subtitle_url);
+                    updateStats(true, responseTime);
+                } else {
+                    throw new Error(result.error || '字幕生成失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ 影片字幕生成失敗: ${error.message}`);
+                showResult('videoResult', `字幕生成失敗: ${error.message}`, false);
+                updateStats(false, responseTime);
+            }
+        }
+
+        // 保存Whisper結果到專用表
+        async function recordWhisperResult(mediaType, mediaUrl, transcribedText, processingTime, srtContent = null) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/test/whisper/record`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        media_type: mediaType,
+                        media_url: mediaUrl,
+                        transcribed_text: transcribedText,
+                        srt_content: srtContent,
+                        processing_time_seconds: processingTime / 1000,
+                        model_used: 'tiny',
+                        session_id: currentTestSession
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    log(`💾 Whisper結果已保存到專用表: 記錄ID ${result.record_id}`);
+                }
+            } catch (error) {
+                log(`❌ Whisper結果保存失敗: ${error.message}`);
+            }
+        }
+
+        // 視頻處理測試
+        async function testVideoProcess() {
+            const fileInput = document.getElementById('videoFile');
+            const operation = document.getElementById('videoOperation').value;
+            const settings = document.getElementById('videoSettings').value;
+            
+            if (!fileInput.files[0]) {
+                showResult('videoResult', '請先選擇視頻文件！', false);
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            log(`🎬 開始視頻處理測試: ${file.name} - ${operation}`);
+            
+            try {
+                const startTime = Date.now();
+                const formData = new FormData();
+                formData.append('video', file);
+                formData.append('operation', operation);
+                formData.append('settings', settings);
+                
+                const response = await fetch(`${BASE_URL}/v1/video/process`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ 視頻處理成功！用時: ${responseTime}ms`);
+                    log(`🔗 輸出文件: ${result.output_url}`);
+                    showResult('videoResult', `處理成功！\n操作類型: ${operation}\n輸出文件: ${result.output_url}\n處理時間: ${responseTime}ms`);
+                    updateStats(true, responseTime);
+                } else {
+                    throw new Error(result.error || '處理失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ 視頻處理失敗: ${error.message}`);
+                showResult('videoResult', `處理失敗: ${error.message}`, false);
+                updateStats(false, responseTime);
+            }
+        }
+
+        // 圖像處理測試
+        async function testImageProcess() {
+            const fileInput = document.getElementById('imageFile');
+            const operation = document.getElementById('imageOperation').value;
+            const settings = document.getElementById('imageSettings').value;
+            
+            if (!fileInput.files[0]) {
+                showResult('imageResult', '請先選擇圖片文件！', false);
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            log(`🖼️ 開始圖像處理測試: ${file.name} - ${operation}`);
+            
+            try {
+                const startTime = Date.now();
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('operation', operation);
+                formData.append('settings', settings);
+                
+                const response = await fetch(`${BASE_URL}/v1/image/process`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ 圖像處理成功！用時: ${responseTime}ms`);
+                    showResult('imageResult', `處理成功！\n操作: ${operation}\n輸出: ${result.output_url}\n處理時間: ${responseTime}ms`);
+                    updateStats(true, responseTime);
+                } else {
+                    throw new Error(result.error || '處理失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ 圖像處理失敗: ${error.message}`);
+                showResult('imageResult', `處理失敗: ${error.message}`, false);
+                updateStats(false, responseTime);
+            }
+        }
+
+        // 文件上傳測試
+        async function testFileUpload() {
+            const fileInput = document.getElementById('anyFile');
+            const method = document.getElementById('uploadMethod').value;
+            const storageType = document.getElementById('storageType').value;
+            
+            if (!fileInput.files[0]) {
+                showResult('fileResult', '請先選擇文件！', false);
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            log(`📤 開始文件上傳測試: ${file.name} - ${method}`);
+            
+            try {
+                const startTime = Date.now();
+                let response;
+                
+                if (method === 'base64') {
+                    const base64Data = await fileToBase64(file);
+                    response = await fetch(`${BASE_URL}/api/file/upload-base64`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            filename: file.name,
+                            data: base64Data,
+                            storage_type: storageType
+                        })
+                    });
+                } else {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('storage_type', storageType);
+                    
+                    response = await fetch(`${BASE_URL}/api/file/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ 文件上傳成功！用時: ${responseTime}ms`);
+                    log(`🔗 文件URL: ${result.file_url}`);
+                    showResult('fileResult', `上傳成功！\n方式: ${method}\n文件URL: ${result.file_url}\n處理時間: ${responseTime}ms`);
+                    updateStats(true, responseTime);
+                } else {
+                    throw new Error(result.error || '上傳失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ 文件上傳失敗: ${error.message}`);
+                showResult('fileResult', `上傳失敗: ${error.message}`, false);
+                updateStats(false, responseTime);
+            }
+        }
+
+        // 工具函數：文件轉Base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // 上傳文件到服務器（內部使用）
+        async function uploadFileToServer(file) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch(`${BASE_URL}/api/file/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                return await response.json();
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // 文本處理測試
+        async function testTextProcess() {
+            const text = document.getElementById('textContent').value;
+            const operation = document.getElementById('textOperation').value;
+            const targetLang = document.getElementById('targetLanguage').value;
+            
+            if (!text.trim()) {
+                showResult('toolkitResult', '請輸入文本內容！', false);
+                return;
+            }
+            
+            log(`📝 開始文本處理測試: ${operation}`);
+            
+            try {
+                const startTime = Date.now();
+                
+                const response = await fetch(`${BASE_URL}/v1/text/process`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        text: text,
+                        operation: operation,
+                        target_language: targetLang
+                    })
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ 文本處理成功！用時: ${responseTime}ms`);
+                    showResult('toolkitResult', `處理成功！\n操作: ${operation}\n結果: ${result.result}\n處理時間: ${responseTime}ms`);
+                    updateStats(true, responseTime);
+                } else {
+                    throw new Error(result.error || '處理失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ 文本處理失敗: ${error.message}`);
+                showResult('toolkitResult', `處理失敗: ${error.message}`, false);
+                updateStats(false, responseTime);
+            }
+        }
+
+        // API健康檢查測試
+        async function testAPIHealth() {
+            log('❤️ 開始API健康檢查測試');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${BASE_URL}/health`);
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ API健康檢查通過！用時: ${responseTime}ms`);
+                    showResult('toolkitResult', `健康檢查通過！\n狀態: ${result.status}\n響應時間: ${responseTime}ms\n構建版本: ${result.fix}`);
+                    updateStats(true, responseTime);
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ API健康檢查失敗: ${error.message}`);
+                showResult('toolkitResult', `健康檢查失敗: ${error.message}`, false);
+                updateStats(false, responseTime);
+            }
+        }
+
+        // 批量測試
+        async function runBatchTest() {
+            const suite = document.getElementById('testSuite').value;
+            const concurrency = parseInt(document.getElementById('concurrency').value);
+            
+            log(`⚡ 開始批量測試: ${suite} (${concurrency}並發)`);
+            
+            if (!currentTestSession) {
+                await createTestSession(`批量測試_${suite}_${concurrency}並發`);
+            }
+            
+            showResult('batchResult', `正在執行${suite}測試套件...`);
+            
+            // 根據測試套件執行不同的測試
+            const testFunctions = {
+                'basic': [testAPIHealth],
+                'performance': [testAPIHealth, testTextProcess],
+                'integration': [testAPIHealth, testTextProcess, testFileUpload],
+                'all': [testAPIHealth, testTextProcess, testFileUpload, testImageProcess]
+            };
+            
+            const tests = testFunctions[suite] || testFunctions['basic'];
+            
+            try {
+                for (let i = 0; i < concurrency; i++) {
+                    log(`🚀 啟動測試線程 ${i + 1}`);
+                    for (const testFunc of tests) {
+                        await testFunc();
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // 間隔1秒
+                    }
+                }
+                
+                showResult('batchResult', `批量測試完成！\n套件: ${suite}\n並發: ${concurrency}\n總計: ${testStats.total} 個測試`);
+                log(`✅ 批量測試完成！執行了 ${testStats.total} 個測試`);
+            } catch (error) {
+                log(`❌ 批量測試失敗: ${error.message}`);
+                showResult('batchResult', `批量測試失敗: ${error.message}`, false);
+            }
+        }
+
+        // 清空所有日誌
+        function clearAllLogs() {
+            const logElements = ['audioLog', 'videoLog', 'imageLog', 'fileLog', 'toolkitLog', 'batchLog'];
+            const resultElements = ['audioResult', 'videoResult', 'imageResult', 'fileResult', 'toolkitResult', 'batchResult'];
+            
+            [...logElements, ...resultElements].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = '';
+                    element.className = element.id.includes('Log') ? 'result log' : 'result';
+                }
+            });
+            
+            log('🗑️ 所有日誌已清空');
+        }
+
+        // 加載測試歷史
+        async function loadTestHistory() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/test/history`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`📊 載入測試歷史: ${result.total_tests} 個歷史測試記錄`);
+                    // 可以在此處顯示歷史統計
+                }
+            } catch (error) {
+                log(`⚠️ 無法載入測試歷史: ${error.message}`);
+            }
+        }
+
+        // 壓力測試
+        async function runStressTest() {
+            log('⚡ 開始壓力測試...');
+            showResult('batchResult', '正在執行壓力測試，請稍候...');
+            
+            const testCount = 20;
+            const promises = [];
+            
+            for (let i = 0; i < testCount; i++) {
+                promises.push(testAPIHealth());
+                if (i % 5 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+            
+            try {
+                await Promise.all(promises);
+                showResult('batchResult', `壓力測試完成！\n併發執行: ${testCount} 個請求\n成功率: ${(testStats.success / testStats.total * 100).toFixed(1)}%`);
+            } catch (error) {
+                showResult('batchResult', `壓力測試失敗: ${error.message}`, false);
+            }
+        }
+
+        // 停止所有測試
+        function stopAllTests() {
+            log('🛑 停止所有測試');
+            showResult('batchResult', '所有測試已停止');
+            // 這裡可以添加停止邏輯
+        }
+    </script>
+</body>
+</html>

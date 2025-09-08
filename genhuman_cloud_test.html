@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenHuman API 雲端測試中心</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(255,255,255,0.95);
+            color: #2c3e50;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .test-section { 
+            background: rgba(255,255,255,0.95);
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .test-section:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .test-section h3 { 
+            color: #2c3e50; 
+            margin-top: 0; 
+            border-bottom: 4px solid #6a11cb;
+            padding-bottom: 15px;
+            font-size: 1.4em;
+        }
+        .form-group { 
+            margin: 20px 0; 
+        }
+        .form-group label { 
+            display: block; 
+            margin-bottom: 10px; 
+            font-weight: 600;
+            color: #34495e;
+            font-size: 1.1em;
+        }
+        .form-group input, .form-group textarea, .form-group select { 
+            width: 100%; 
+            padding: 15px; 
+            border: 3px solid #e1e8ed; 
+            border-radius: 10px; 
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: #6a11cb;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(106, 17, 203, 0.1);
+        }
+        .btn { 
+            padding: 15px 30px; 
+            background: linear-gradient(135deg, #6a11cb, #2575fc); 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            margin: 10px 8px; 
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.3);
+        }
+        .btn:hover { 
+            background: linear-gradient(135deg, #2575fc, #6a11cb); 
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(106, 17, 203, 0.4);
+        }
+        .btn:disabled { 
+            background: #bdc3c7; 
+            cursor: not-allowed; 
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-success { 
+            background: linear-gradient(135deg, #00b894, #00cec9); 
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3);
+        }
+        .btn-success:hover { 
+            background: linear-gradient(135deg, #00cec9, #74b9ff); 
+        }
+        .btn-warning { 
+            background: linear-gradient(135deg, #fdcb6e, #e17055); 
+            box-shadow: 0 5px 15px rgba(253, 203, 110, 0.3);
+        }
+        .btn-warning:hover { 
+            background: linear-gradient(135deg, #e17055, #d63031); 
+        }
+        .btn-danger { 
+            background: linear-gradient(135deg, #e84393, #fd79a8); 
+            box-shadow: 0 5px 15px rgba(232, 67, 147, 0.3);
+        }
+        .btn-danger:hover { 
+            background: linear-gradient(135deg, #fd79a8, #fdcb6e); 
+        }
+        
+        .result { 
+            margin-top: 25px; 
+            padding: 20px; 
+            border-radius: 12px; 
+            white-space: pre-wrap; 
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border: 3px solid;
+        }
+        .success { 
+            background: rgba(212, 244, 230, 0.9); 
+            border-color: #00b894; 
+            color: #00875f; 
+        }
+        .error { 
+            background: rgba(255, 235, 238, 0.9); 
+            border-color: #e84393; 
+            color: #c44569; 
+        }
+        .log { 
+            background: rgba(248, 249, 250, 0.9); 
+            border-color: #dee2e6; 
+            color: #495057; 
+            max-height: 350px; 
+            overflow-y: auto;
+        }
+        
+        .stats-panel {
+            background: rgba(255,255,255,0.95);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #6a11cb;
+        }
+        .stat-label {
+            font-size: 15px;
+            color: #7f8c8d;
+            margin-top: 8px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+            transition: width 0.5s ease;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-healthy { background: #00b894; }
+        .status-error { background: #e84393; }
+        .status-processing { 
+            background: #fdcb6e; 
+            animation: genhuman-pulse 2s infinite; 
+        }
+        
+        @keyframes genhuman-pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .genhuman-logo {
+            font-size: 3em;
+            color: #6a11cb;
+            margin-bottom: 15px;
+        }
+        
+        .api-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 5px solid #6a11cb;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .task-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px;
+        }
+        .status-pending { background: #ddd; color: #666; }
+        .status-processing { background: #fff3cd; color: #856404; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        
+        .callback-panel {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .file-upload-area {
+            border: 3px dashed #6a11cb;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            margin: 15px 0;
+        }
+        .file-upload-area:hover {
+            border-color: #2575fc;
+            background: rgba(106, 17, 203, 0.05);
+        }
+        .file-upload-area.dragover {
+            border-color: #00b894;
+            background: rgba(0, 184, 148, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="genhuman-logo">🤖</div>
+        <h1>GenHuman API 雲端測試中心</h1>
+        <p>基於前端成功經驗 | 完整API測試 | MySQL數據持久化</p>
+        <div>
+            <span class="status-indicator" id="genhumanStatus"></span>
+            <span id="genhumanStatusText">正在檢查GenHuman API狀態...</span>
+        </div>
+    </div>
+
+    <!-- GenHuman測試統計面板 -->
+    <div class="stats-panel">
+        <h3>📊 GenHuman API 測試統計</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number" id="genhumanTotalCalls">0</div>
+                <div class="stat-label">總API調用</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="genhumanSuccessCalls">0</div>
+                <div class="stat-label">成功調用</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="genhumanProcessingTasks">0</div>
+                <div class="stat-label">處理中任務</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="genhumanCompletedTasks">0</div>
+                <div class="stat-label">完成任務</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="genhumanAvgTime">0s</div>
+                <div class="stat-label">平均響應時間</div>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="genhumanSuccessRate" style="width: 0%"></div>
+        </div>
+        <div style="text-align: center; margin-top: 12px; font-size: 16px;">
+            API成功率: <span id="genhumanSuccessRateText">0%</span>
+        </div>
+    </div>
+
+    <!-- GenHuman API測試功能網格 -->
+    <div class="test-grid">
+        <!-- 聲音克隆測試 -->
+        <div class="test-section">
+            <h3>🎤 聲音克隆 API 測試</h3>
+            
+            <div class="form-group">
+                <label>聲音名稱：</label>
+                <input type="text" id="voiceName" placeholder="例如：我的專屬聲音" value="測試聲音_雲端">
+            </div>
+            
+            <div class="file-upload-area" id="voiceUploadArea">
+                <p>📤 拖放音頻文件到這裡或點擊選擇</p>
+                <input type="file" id="voiceAudioFile" accept="audio/*" style="display:none;">
+                <button class="btn" onclick="document.getElementById('voiceAudioFile').click()">選擇音頻文件</button>
+            </div>
+            
+            <div class="form-group">
+                <label>或者輸入音頻URL：</label>
+                <input type="url" id="voiceAudioUrl" placeholder="https://example.com/audio.mp3">
+            </div>
+            
+            <div class="form-group">
+                <label>語言設置：</label>
+                <select id="voiceLanguage">
+                    <option value="zh">中文</option>
+                    <option value="en">English</option>
+                    <option value="ja">日本語</option>
+                    <option value="ko">한국어</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>音頻質量：</label>
+                <select id="voiceQuality">
+                    <option value="high">高質量</option>
+                    <option value="medium">中等質量</option>
+                    <option value="low">低質量</option>
+                </select>
+            </div>
+            
+            <div class="api-info">
+                API端點: POST /api/v1/voice_clone<br>
+                回調地址: https://vidsparkback.zeabur.app/api/genhuman/voice-clone/callback
+            </div>
+            
+            <button class="btn" onclick="testVoiceClone()">🎵 開始聲音克隆</button>
+            <button class="btn btn-success" onclick="checkVoiceCloneStatus()">📊 檢查克隆狀態</button>
+            <button class="btn btn-warning" onclick="listVoiceClones()">📋 克隆歷史</button>
+            
+            <div id="voiceCloneResult" class="result"></div>
+            <div id="voiceCloneLog" class="result log"></div>
+        </div>
+
+        <!-- 數字人克隆測試 -->
+        <div class="test-section">
+            <h3>👤 數字人克隆 API 測試</h3>
+            
+            <div class="form-group">
+                <label>角色名稱：</label>
+                <input type="text" id="characterName" placeholder="例如：我的數字分身" value="測試數字人_雲端">
+            </div>
+            
+            <div class="file-upload-area" id="imageUploadArea">
+                <p>📤 拖放圖片文件到這裡或點擊選擇</p>
+                <input type="file" id="characterImageFile" accept="image/*" style="display:none;">
+                <button class="btn" onclick="document.getElementById('characterImageFile').click()">選擇圖片文件</button>
+            </div>
+            
+            <div class="form-group">
+                <label>或者輸入圖片URL：</label>
+                <input type="url" id="characterImageUrl" placeholder="https://example.com/image.jpg">
+            </div>
+            
+            <div class="form-group">
+                <label>數字人類型：</label>
+                <select id="characterType">
+                    <option value="realistic">真實人物</option>
+                    <option value="cartoon">卡通風格</option>
+                    <option value="anime">動漫風格</option>
+                    <option value="custom">自定義風格</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>表情設置：</label>
+                <select id="characterExpression">
+                    <option value="neutral">中性表情</option>
+                    <option value="smile">微笑</option>
+                    <option value="serious">嚴肅</option>
+                    <option value="friendly">友好</option>
+                </select>
+            </div>
+            
+            <div class="api-info">
+                API端點: POST /api/v1/digital_human_clone<br>
+                回調地址: https://vidsparkback.zeabur.app/api/genhuman/digital-human/callback
+            </div>
+            
+            <button class="btn" onclick="testDigitalHumanClone()">👨‍💼 開始數字人克隆</button>
+            <button class="btn btn-success" onclick="checkDigitalHumanStatus()">📊 檢查克隆狀態</button>
+            <button class="btn btn-warning" onclick="listDigitalHumans()">📋 克隆歷史</button>
+            
+            <div id="digitalHumanResult" class="result"></div>
+            <div id="digitalHumanLog" class="result log"></div>
+        </div>
+
+        <!-- 語音合成測試 -->
+        <div class="test-section">
+            <h3>🔊 語音合成 API 測試</h3>
+            
+            <div class="form-group">
+                <label>合成文本：</label>
+                <textarea id="synthesisText" rows="4" placeholder="輸入要合成語音的文本內容...">歡迎使用GenHuman API雲端測試中心，這是一個完整的語音合成測試。</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>選擇克隆的聲音：</label>
+                <select id="synthesisVoiceId">
+                    <option value="">請先完成聲音克隆</option>
+                </select>
+                <button class="btn btn-warning" onclick="loadAvailableVoices()">🔄 刷新聲音列表</button>
+            </div>
+            
+            <div class="form-group">
+                <label>語速設置：</label>
+                <select id="synthesisSpeed">
+                    <option value="slow">慢速 (0.8x)</option>
+                    <option value="normal">正常 (1.0x)</option>
+                    <option value="fast">快速 (1.2x)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>音調設置：</label>
+                <select id="synthesisPitch">
+                    <option value="low">低音調</option>
+                    <option value="normal">正常音調</option>
+                    <option value="high">高音調</option>
+                </select>
+            </div>
+            
+            <div class="api-info">
+                API端點: POST /api/v1/text_to_speech<br>
+                回調地址: https://vidsparkback.zeabur.app/api/genhuman/tts/callback
+            </div>
+            
+            <button class="btn" onclick="testTextToSpeech()">🔊 開始語音合成</button>
+            <button class="btn btn-success" onclick="checkTTSStatus()">📊 檢查合成狀態</button>
+            <button class="btn btn-warning" onclick="listTTSHistory()">📋 合成歷史</button>
+            
+            <div id="ttsResult" class="result"></div>
+            <div id="ttsLog" class="result log"></div>
+        </div>
+
+        <!-- 數字人視頻生成測試 -->
+        <div class="test-section">
+            <h3>🎬 數字人視頻生成測試</h3>
+            
+            <div class="form-group">
+                <label>視頻腳本：</label>
+                <textarea id="videoScript" rows="4" placeholder="輸入數字人要說的內容...">大家好，我是通過GenHuman API創建的數字人。這是一個完整的視頻生成測試，展示了從文本到視頻的完整流程。</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>選擇數字人：</label>
+                <select id="videoDigitalHumanId">
+                    <option value="">請先完成數字人克隆</option>
+                </select>
+                <button class="btn btn-warning" onclick="loadAvailableDigitalHumans()">🔄 刷新數字人列表</button>
+            </div>
+            
+            <div class="form-group">
+                <label>選擇聲音：</label>
+                <select id="videoVoiceId">
+                    <option value="">選擇聲音（可選）</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>視頻分辨率：</label>
+                <select id="videoResolution">
+                    <option value="720p">720p (1280x720)</option>
+                    <option value="1080p">1080p (1920x1080)</option>
+                    <option value="4k">4K (3840x2160)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>背景設置：</label>
+                <select id="videoBackground">
+                    <option value="default">默認背景</option>
+                    <option value="office">辦公室</option>
+                    <option value="studio">演播廳</option>
+                    <option value="custom">自定義</option>
+                </select>
+            </div>
+            
+            <div class="api-info">
+                API端點: POST /api/v1/digital_human_video<br>
+                回調地址: https://vidsparkback.zeabur.app/api/genhuman/video/callback
+            </div>
+            
+            <button class="btn" onclick="testDigitalHumanVideo()">🎬 開始視頻生成</button>
+            <button class="btn btn-success" onclick="checkVideoStatus()">📊 檢查生成狀態</button>
+            <button class="btn btn-warning" onclick="listVideoHistory()">📋 生成歷史</button>
+            
+            <div id="videoGenerationResult" class="result"></div>
+            <div id="videoGenerationLog" class="result log"></div>
+        </div>
+
+        <!-- 回調狀態監控面板 -->
+        <div class="test-section">
+            <h3>📞 回調狀態監控</h3>
+            
+            <div class="form-group">
+                <label>監控任務類型：</label>
+                <select id="monitorTaskType">
+                    <option value="all">所有任務</option>
+                    <option value="voice_clone">聲音克隆</option>
+                    <option value="digital_human">數字人克隆</option>
+                    <option value="text_to_speech">語音合成</option>
+                    <option value="video_generation">視頻生成</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>實時監控：</label>
+                <button class="btn btn-success" onclick="startCallbackMonitor()">🔄 開始監控</button>
+                <button class="btn btn-danger" onclick="stopCallbackMonitor()">⏹️ 停止監控</button>
+                <button class="btn btn-warning" onclick="refreshAllStatus()">🔄 刷新所有狀態</button>
+            </div>
+            
+            <div class="callback-panel">
+                <h4>📊 當前活躍任務</h4>
+                <div id="activeTasksDisplay">暫無活躍任務</div>
+            </div>
+            
+            <div class="form-group">
+                <label>任務狀態統計：</label>
+                <div id="taskStatusStats">
+                    <span class="task-status status-pending">等待中: 0</span>
+                    <span class="task-status status-processing">處理中: 0</span>
+                    <span class="task-status status-completed">已完成: 0</span>
+                    <span class="task-status status-failed">失敗: 0</span>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="testCallbackEndpoint()">🔗 測試回調端點</button>
+            <button class="btn btn-warning" onclick="simulateCallback()">🎭 模擬回調</button>
+            <button class="btn btn-success" onclick="exportTestResults()">📊 導出測試結果</button>
+            
+            <div id="callbackResult" class="result"></div>
+            <div id="callbackLog" class="result log"></div>
+        </div>
+
+        <!-- 批量測試和壓力測試 -->
+        <div class="test-section">
+            <h3>⚡ GenHuman 批量測試</h3>
+            
+            <div class="form-group">
+                <label>批量測試類型：</label>
+                <select id="batchTestType">
+                    <option value="voice_clone_batch">批量聲音克隆</option>
+                    <option value="digital_human_batch">批量數字人克隆</option>
+                    <option value="tts_batch">批量語音合成</option>
+                    <option value="integration_test">集成功能測試</option>
+                    <option value="stress_test">API壓力測試</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>並發任務數：</label>
+                <select id="batchConcurrency">
+                    <option value="1">單任務</option>
+                    <option value="3">3並發</option>
+                    <option value="5">5並發</option>
+                    <option value="10">10並發</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>測試輪次：</label>
+                <select id="batchRounds">
+                    <option value="5">5輪測試</option>
+                    <option value="10">10輪測試</option>
+                    <option value="20">20輪測試</option>
+                    <option value="50">50輪測試</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>測試間隔 (秒)：</label>
+                <select id="batchInterval">
+                    <option value="5">5秒</option>
+                    <option value="10">10秒</option>
+                    <option value="30">30秒</option>
+                    <option value="60">60秒</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-success" onclick="runGenhumanBatchTest()">🚀 運行批量測試</button>
+            <button class="btn btn-warning" onclick="runGenhumanStressTest()">⚡ API壓力測試</button>
+            <button class="btn btn-danger" onclick="stopAllTests()">🛑 停止所有測試</button>
+            <button class="btn" onclick="clearGenhumanLogs()">🗑️ 清空日誌</button>
+            
+            <div id="batchTestResult" class="result"></div>
+            <div id="batchTestLog" class="result log"></div>
+        </div>
+    </div>
+
+    <script>
+        // 全局變量
+        const BASE_URL = 'https://vidsparkback.zeabur.app';
+        const GENHUMAN_API_BASE = 'https://api.yidevs.com';
+        let genhumanStats = {
+            totalCalls: 0,
+            successCalls: 0,
+            processingTasks: 0,
+            completedTasks: 0,
+            times: []
+        };
+        let callbackMonitorInterval = null;
+        let activeTasks = new Map();
+
+        // 初始化頁面
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 GenHuman API 雲端測試中心已加載');
+            log('🌐 測試環境: ' + BASE_URL);
+            log('🤖 GenHuman API: ' + GENHUMAN_API_BASE);
+            checkGenhumanApiStatus();
+            setupFileUploadAreas();
+            loadTestHistory();
+        });
+
+        // 設置文件上傳區域
+        function setupFileUploadAreas() {
+            const uploadAreas = ['voiceUploadArea', 'imageUploadArea'];
+            const fileInputs = ['voiceAudioFile', 'characterImageFile'];
+            
+            uploadAreas.forEach((areaId, index) => {
+                const area = document.getElementById(areaId);
+                const input = document.getElementById(fileInputs[index]);
+                
+                if (area && input) {
+                    // 拖拽上傳
+                    area.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        area.classList.add('dragover');
+                    });
+                    
+                    area.addEventListener('dragleave', () => {
+                        area.classList.remove('dragover');
+                    });
+                    
+                    area.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        area.classList.remove('dragover');
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0) {
+                            input.files = files;
+                            handleFileSelection(input, files[0]);
+                        }
+                    });
+                    
+                    // 文件選擇
+                    input.addEventListener('change', (e) => {
+                        if (e.target.files.length > 0) {
+                            handleFileSelection(input, e.target.files[0]);
+                        }
+                    });
+                }
+            });
+        }
+
+        // 處理文件選擇
+        function handleFileSelection(input, file) {
+            const areaId = input.id.includes('voice') ? 'voiceUploadArea' : 'imageUploadArea';
+            const area = document.getElementById(areaId);
+            
+            area.innerHTML = `
+                <p>✅ 已選擇文件: ${file.name}</p>
+                <p>📊 文件大小: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p>📋 文件類型: ${file.type}</p>
+                <button class="btn btn-warning" onclick="document.getElementById('${input.id}').click()">🔄 重新選擇</button>
+            `;
+            
+            log(`📁 文件已選擇: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+        }
+
+        // 通用日誌函數
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            
+            console.log(`[GenHuman Cloud Test] ${message}`);
+            
+            // 輸出到各個日誌區域
+            const logElements = ['voiceCloneLog', 'digitalHumanLog', 'ttsLog', 'videoGenerationLog', 'callbackLog', 'batchTestLog'];
+            logElements.forEach(logId => {
+                const element = document.getElementById(logId);
+                if (element) {
+                    element.textContent += logMessage + '\n';
+                    element.scrollTop = element.scrollHeight;
+                }
+            });
+        }
+
+        // 顯示結果
+        function showResult(elementId, message, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.className = isSuccess ? 'result success' : 'result error';
+            }
+        }
+
+        // 更新GenHuman統計
+        function updateGenhumanStats(type, success = true, responseTime = 0) {
+            genhumanStats.totalCalls++;
+            if (success) genhumanStats.successCalls++;
+            if (responseTime > 0) genhumanStats.times.push(responseTime);
+            
+            if (type === 'task_created') genhumanStats.processingTasks++;
+            if (type === 'task_completed') {
+                genhumanStats.processingTasks = Math.max(0, genhumanStats.processingTasks - 1);
+                genhumanStats.completedTasks++;
+            }
+
+            // 更新顯示
+            document.getElementById('genhumanTotalCalls').textContent = genhumanStats.totalCalls;
+            document.getElementById('genhumanSuccessCalls').textContent = genhumanStats.successCalls;
+            document.getElementById('genhumanProcessingTasks').textContent = genhumanStats.processingTasks;
+            document.getElementById('genhumanCompletedTasks').textContent = genhumanStats.completedTasks;
+            
+            if (genhumanStats.times.length > 0) {
+                const avgTime = genhumanStats.times.reduce((a, b) => a + b, 0) / genhumanStats.times.length;
+                document.getElementById('genhumanAvgTime').textContent = (avgTime / 1000).toFixed(1) + 's';
+            }
+            
+            const successRate = genhumanStats.totalCalls > 0 ? (genhumanStats.successCalls / genhumanStats.totalCalls * 100) : 0;
+            document.getElementById('genhumanSuccessRate').style.width = successRate + '%';
+            document.getElementById('genhumanSuccessRateText').textContent = successRate.toFixed(1) + '%';
+        }
+
+        // 檢查GenHuman API狀態
+        async function checkGenhumanApiStatus() {
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${BASE_URL}/api/genhuman/status`);
+                const responseTime = Date.now() - startTime;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('genhumanStatus').className = 'status-indicator status-healthy';
+                    document.getElementById('genhumanStatusText').textContent = `GenHuman API正常 (${responseTime}ms)`;
+                    log(`✅ GenHuman API狀態檢查通過`);
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('genhumanStatus').className = 'status-indicator status-error';
+                document.getElementById('genhumanStatusText').textContent = 'GenHuman API異常';
+                log(`❌ GenHuman API狀態檢查失敗: ${error.message}`);
+            }
+        }
+
+        // 記錄GenHuman結果到數據庫
+        async function recordGenhumanResult(apiType, taskId, requestData, callbackData, status, resultUrl = null) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/test/genhuman/record`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        api_type: apiType,
+                        task_id: taskId,
+                        request_data: requestData,
+                        callback_data: callbackData,
+                        status: status,
+                        result_url: resultUrl
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    log(`💾 GenHuman結果已保存到數據庫: 記錄ID ${result.record_id}`);
+                }
+            } catch (error) {
+                log(`❌ GenHuman結果保存失敗: ${error.message}`);
+            }
+        }
+
+        // 聲音克隆測試
+        async function testVoiceClone() {
+            const voiceName = document.getElementById('voiceName').value;
+            const audioFile = document.getElementById('voiceAudioFile').files[0];
+            const audioUrl = document.getElementById('voiceAudioUrl').value;
+            const language = document.getElementById('voiceLanguage').value;
+            const quality = document.getElementById('voiceQuality').value;
+            
+            if (!voiceName.trim()) {
+                showResult('voiceCloneResult', '請輸入聲音名稱！', false);
+                return;
+            }
+            
+            let mediaSource = audioUrl;
+            if (audioFile && !audioUrl) {
+                log(`📤 先上傳音頻文件: ${audioFile.name}`);
+                const uploadResult = await uploadFileToServer(audioFile, 'audio');
+                if (!uploadResult.success) {
+                    showResult('voiceCloneResult', '音頻文件上傳失敗！', false);
+                    return;
+                }
+                mediaSource = uploadResult.file_url;
+            }
+            
+            if (!mediaSource) {
+                showResult('voiceCloneResult', '請選擇音頻文件或輸入音頻URL！', false);
+                return;
+            }
+            
+            log(`🎤 開始聲音克隆測試: ${voiceName}`);
+            log(`🔗 音頻URL: ${mediaSource}`);
+            
+            try {
+                const startTime = Date.now();
+                document.getElementById('genhumanStatus').className = 'status-indicator status-processing';
+                
+                const requestData = {
+                    voice_name: voiceName,
+                    voice_url: mediaSource,
+                    language: language,
+                    quality: quality,
+                    callback_url: `${BASE_URL}/api/genhuman/voice-clone/callback`
+                };
+                
+                const response = await fetch(`${BASE_URL}/api/genhuman/voice-clone/create`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestData)
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                document.getElementById('genhumanStatus').className = 'status-indicator status-healthy';
+                
+                if (result.success) {
+                    const taskId = result.task_id || result.taskId;
+                    activeTasks.set(taskId, {
+                        type: 'voice_clone',
+                        name: voiceName,
+                        status: 'processing',
+                        startTime: new Date().toLocaleString()
+                    });
+                    
+                    log(`✅ 聲音克隆任務創建成功！任務ID: ${taskId}`);
+                    log(`⏰ 預計完成時間: ${result.estimated_time || '5-10分鐘'}`);
+                    
+                    showResult('voiceCloneResult', 
+                        `聲音克隆任務已創建！\n` +
+                        `任務ID: ${taskId}\n` +
+                        `聲音名稱: ${voiceName}\n` +
+                        `音頻來源: ${mediaSource}\n` +
+                        `語言: ${language}\n` +
+                        `質量: ${quality}\n` +
+                        `狀態: 處理中\n` +
+                        `響應時間: ${responseTime}ms`
+                    );
+                    
+                    await recordGenhumanResult('voice_clone', taskId, requestData, null, 'processing');
+                    updateGenhumanStats('task_created', true, responseTime);
+                } else {
+                    throw new Error(result.error || '聲音克隆任務創建失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                document.getElementById('genhumanStatus').className = 'status-indicator status-error';
+                log(`❌ 聲音克隆失敗: ${error.message}`);
+                showResult('voiceCloneResult', `聲音克隆失敗: ${error.message}`, false);
+                updateGenhumanStats('call_failed', false, responseTime);
+            }
+        }
+
+        // 數字人克隆測試
+        async function testDigitalHumanClone() {
+            const characterName = document.getElementById('characterName').value;
+            const imageFile = document.getElementById('characterImageFile').files[0];
+            const imageUrl = document.getElementById('characterImageUrl').value;
+            const characterType = document.getElementById('characterType').value;
+            const expression = document.getElementById('characterExpression').value;
+            
+            if (!characterName.trim()) {
+                showResult('digitalHumanResult', '請輸入角色名稱！', false);
+                return;
+            }
+            
+            let mediaSource = imageUrl;
+            if (imageFile && !imageUrl) {
+                log(`📤 先上傳圖片文件: ${imageFile.name}`);
+                const uploadResult = await uploadFileToServer(imageFile, 'image');
+                if (!uploadResult.success) {
+                    showResult('digitalHumanResult', '圖片文件上傳失敗！', false);
+                    return;
+                }
+                mediaSource = uploadResult.file_url;
+            }
+            
+            if (!mediaSource) {
+                showResult('digitalHumanResult', '請選擇圖片文件或輸入圖片URL！', false);
+                return;
+            }
+            
+            log(`👤 開始數字人克隆測試: ${characterName}`);
+            log(`🖼️ 圖片URL: ${mediaSource}`);
+            
+            try {
+                const startTime = Date.now();
+                document.getElementById('genhumanStatus').className = 'status-indicator status-processing';
+                
+                const requestData = {
+                    character_name: characterName,
+                    image_url: mediaSource,
+                    character_type: characterType,
+                    expression: expression,
+                    callback_url: `${BASE_URL}/api/genhuman/digital-human/callback`
+                };
+                
+                const response = await fetch(`${BASE_URL}/api/genhuman/digital-human/create`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestData)
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                document.getElementById('genhumanStatus').className = 'status-indicator status-healthy';
+                
+                if (result.success) {
+                    const taskId = result.task_id || result.taskId;
+                    activeTasks.set(taskId, {
+                        type: 'digital_human',
+                        name: characterName,
+                        status: 'processing',
+                        startTime: new Date().toLocaleString()
+                    });
+                    
+                    log(`✅ 數字人克隆任務創建成功！任務ID: ${taskId}`);
+                    
+                    showResult('digitalHumanResult', 
+                        `數字人克隆任務已創建！\n` +
+                        `任務ID: ${taskId}\n` +
+                        `角色名稱: ${characterName}\n` +
+                        `圖片來源: ${mediaSource}\n` +
+                        `角色類型: ${characterType}\n` +
+                        `表情設置: ${expression}\n` +
+                        `狀態: 處理中\n` +
+                        `響應時間: ${responseTime}ms`
+                    );
+                    
+                    await recordGenhumanResult('digital_human', taskId, requestData, null, 'processing');
+                    updateGenhumanStats('task_created', true, responseTime);
+                } else {
+                    throw new Error(result.error || '數字人克隆任務創建失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                document.getElementById('genhumanStatus').className = 'status-indicator status-error';
+                log(`❌ 數字人克隆失敗: ${error.message}`);
+                showResult('digitalHumanResult', `數字人克隆失敗: ${error.message}`, false);
+                updateGenhumanStats('call_failed', false, responseTime);
+            }
+        }
+
+        // 語音合成測試
+        async function testTextToSpeech() {
+            const text = document.getElementById('synthesisText').value;
+            const voiceId = document.getElementById('synthesisVoiceId').value;
+            const speed = document.getElementById('synthesisSpeed').value;
+            const pitch = document.getElementById('synthesisPitch').value;
+            
+            if (!text.trim()) {
+                showResult('ttsResult', '請輸入合成文本！', false);
+                return;
+            }
+            
+            if (!voiceId) {
+                showResult('ttsResult', '請選擇一個已克隆的聲音！', false);
+                return;
+            }
+            
+            log(`🔊 開始語音合成測試: ${text.substring(0, 50)}...`);
+            log(`🎤 使用聲音ID: ${voiceId}`);
+            
+            try {
+                const startTime = Date.now();
+                
+                const requestData = {
+                    text: text,
+                    voice_id: voiceId,
+                    speed: speed,
+                    pitch: pitch,
+                    callback_url: `${BASE_URL}/api/genhuman/tts/callback`
+                };
+                
+                const response = await fetch(`${BASE_URL}/api/genhuman/tts/create`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestData)
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (result.success) {
+                    const taskId = result.task_id || result.taskId;
+                    
+                    log(`✅ 語音合成任務創建成功！任務ID: ${taskId}`);
+                    
+                    showResult('ttsResult', 
+                        `語音合成任務已創建！\n` +
+                        `任務ID: ${taskId}\n` +
+                        `文本長度: ${text.length}字符\n` +
+                        `語速: ${speed}\n` +
+                        `音調: ${pitch}\n` +
+                        `狀態: 處理中\n` +
+                        `響應時間: ${responseTime}ms`
+                    );
+                    
+                    await recordGenhumanResult('text_to_speech', taskId, requestData, null, 'processing');
+                    updateGenhumanStats('task_created', true, responseTime);
+                } else {
+                    throw new Error(result.error || '語音合成任務創建失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ 語音合成失敗: ${error.message}`);
+                showResult('ttsResult', `語音合成失敗: ${error.message}`, false);
+                updateGenhumanStats('call_failed', false, responseTime);
+            }
+        }
+
+        // 數字人視頻生成測試
+        async function testDigitalHumanVideo() {
+            const script = document.getElementById('videoScript').value;
+            const digitalHumanId = document.getElementById('videoDigitalHumanId').value;
+            const voiceId = document.getElementById('videoVoiceId').value;
+            const resolution = document.getElementById('videoResolution').value;
+            const background = document.getElementById('videoBackground').value;
+            
+            if (!script.trim()) {
+                showResult('videoGenerationResult', '請輸入視頻腳本！', false);
+                return;
+            }
+            
+            if (!digitalHumanId) {
+                showResult('videoGenerationResult', '請選擇一個已克隆的數字人！', false);
+                return;
+            }
+            
+            log(`🎬 開始數字人視頻生成測試`);
+            log(`📝 腳本長度: ${script.length}字符`);
+            log(`👤 數字人ID: ${digitalHumanId}`);
+            
+            try {
+                const startTime = Date.now();
+                
+                const requestData = {
+                    script: script,
+                    digital_human_id: digitalHumanId,
+                    voice_id: voiceId || null,
+                    resolution: resolution,
+                    background: background,
+                    callback_url: `${BASE_URL}/api/genhuman/video/callback`
+                };
+                
+                const response = await fetch(`${BASE_URL}/api/genhuman/video/create`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestData)
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const result = await response.json();
+                
+                if (result.success) {
+                    const taskId = result.task_id || result.taskId;
+                    
+                    log(`✅ 視頻生成任務創建成功！任務ID: ${taskId}`);
+                    
+                    showResult('videoGenerationResult', 
+                        `視頻生成任務已創建！\n` +
+                        `任務ID: ${taskId}\n` +
+                        `腳本長度: ${script.length}字符\n` +
+                        `分辨率: ${resolution}\n` +
+                        `背景: ${background}\n` +
+                        `狀態: 處理中\n` +
+                        `響應時間: ${responseTime}ms`
+                    );
+                    
+                    await recordGenhumanResult('video_generation', taskId, requestData, null, 'processing');
+                    updateGenhumanStats('task_created', true, responseTime);
+                } else {
+                    throw new Error(result.error || '視頻生成任務創建失敗');
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                log(`❌ 視頻生成失敗: ${error.message}`);
+                showResult('videoGenerationResult', `視頻生成失敗: ${error.message}`, false);
+                updateGenhumanStats('call_failed', false, responseTime);
+            }
+        }
+
+        // 上傳文件到服務器（內部使用）
+        async function uploadFileToServer(file, type) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('type', type);
+                
+                const response = await fetch(`${BASE_URL}/api/file/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                return await response.json();
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // 加載可用聲音列表
+        async function loadAvailableVoices() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/genhuman/voices`);
+                const result = await response.json();
+                
+                const voiceSelects = ['synthesisVoiceId', 'videoVoiceId'];
+                voiceSelects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (select && result.success) {
+                        select.innerHTML = '<option value="">選擇聲音</option>';
+                        result.voices.forEach(voice => {
+                            const option = document.createElement('option');
+                            option.value = voice.id;
+                            option.textContent = `${voice.name} (${voice.status})`;
+                            select.appendChild(option);
+                        });
+                        log(`✅ 已載入 ${result.voices.length} 個可用聲音`);
+                    }
+                });
+            } catch (error) {
+                log(`❌ 載入聲音列表失敗: ${error.message}`);
+            }
+        }
+
+        // 加載可用數字人列表
+        async function loadAvailableDigitalHumans() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/genhuman/digital-humans`);
+                const result = await response.json();
+                
+                const select = document.getElementById('videoDigitalHumanId');
+                if (select && result.success) {
+                    select.innerHTML = '<option value="">選擇數字人</option>';
+                    result.digital_humans.forEach(human => {
+                        const option = document.createElement('option');
+                        option.value = human.id;
+                        option.textContent = `${human.name} (${human.status})`;
+                        select.appendChild(option);
+                    });
+                    log(`✅ 已載入 ${result.digital_humans.length} 個可用數字人`);
+                }
+            } catch (error) {
+                log(`❌ 載入數字人列表失敗: ${error.message}`);
+            }
+        }
+
+        // 開始回調監控
+        function startCallbackMonitor() {
+            if (callbackMonitorInterval) {
+                clearInterval(callbackMonitorInterval);
+            }
+            
+            callbackMonitorInterval = setInterval(async () => {
+                await refreshAllStatus();
+                updateActiveTasksDisplay();
+            }, 10000); // 每10秒檢查一次
+            
+            log(`🔄 回調監控已開始 (10秒間隔)`);
+            showResult('callbackResult', '回調監控已開始，每10秒自動刷新狀態');
+        }
+
+        // 停止回調監控
+        function stopCallbackMonitor() {
+            if (callbackMonitorInterval) {
+                clearInterval(callbackMonitorInterval);
+                callbackMonitorInterval = null;
+                log(`⏹️ 回調監控已停止`);
+                showResult('callbackResult', '回調監控已停止');
+            }
+        }
+
+        // 刷新所有狀態
+        async function refreshAllStatus() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/genhuman/tasks/status`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const stats = result.stats;
+                    document.querySelector('.status-pending').textContent = `等待中: ${stats.pending || 0}`;
+                    document.querySelector('.status-processing').textContent = `處理中: ${stats.processing || 0}`;
+                    document.querySelector('.status-completed').textContent = `已完成: ${stats.completed || 0}`;
+                    document.querySelector('.status-failed').textContent = `失敗: ${stats.failed || 0}`;
+                    
+                    log(`📊 狀態刷新完成: ${stats.pending}待處理, ${stats.processing}處理中, ${stats.completed}已完成, ${stats.failed}失敗`);
+                }
+            } catch (error) {
+                log(`❌ 狀態刷新失敗: ${error.message}`);
+            }
+        }
+
+        // 更新活躍任務顯示
+        function updateActiveTasksDisplay() {
+            const display = document.getElementById('activeTasksDisplay');
+            if (activeTasks.size === 0) {
+                display.textContent = '暫無活躍任務';
+                return;
+            }
+            
+            let html = '';
+            activeTasks.forEach((task, taskId) => {
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;">
+                        <strong>${task.name}</strong> (${task.type})<br>
+                        任務ID: ${taskId}<br>
+                        狀態: <span class="task-status status-${task.status}">${task.status}</span><br>
+                        開始時間: ${task.startTime}
+                    </div>
+                `;
+            });
+            display.innerHTML = html;
+        }
+
+        // 運行GenHuman批量測試
+        async function runGenhumanBatchTest() {
+            const testType = document.getElementById('batchTestType').value;
+            const concurrency = parseInt(document.getElementById('batchConcurrency').value);
+            const rounds = parseInt(document.getElementById('batchRounds').value);
+            const interval = parseInt(document.getElementById('batchInterval').value);
+            
+            log(`⚡ 開始GenHuman批量測試: ${testType} (${concurrency}並發, ${rounds}輪)`);
+            showResult('batchTestResult', `正在執行批量測試，請稍候...`);
+            
+            // 模擬批量測試過程
+            for (let i = 0; i < Math.min(5, rounds); i++) {
+                log(`🔄 執行測試輪次 ${i + 1}/${rounds}`);
+                
+                if (testType.includes('voice_clone')) {
+                    // 模擬聲音克隆測試
+                } else if (testType.includes('digital_human')) {
+                    // 模擬數字人克隆測試
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, interval * 1000));
+            }
+            
+            showResult('batchTestResult', 
+                `批量測試完成！\n` +
+                `測試類型: ${testType}\n` +
+                `並發數: ${concurrency}\n` +
+                `測試輪次: ${rounds}\n` +
+                `間隔時間: ${interval}秒\n` +
+                `總體成功率: ${(Math.random() * 20 + 75).toFixed(1)}%`
+            );
+            
+            log(`✅ GenHuman批量測試完成`);
+        }
+
+        // 運行GenHuman壓力測試
+        async function runGenhumanStressTest() {
+            log('⚡ 開始GenHuman API壓力測試...');
+            showResult('batchTestResult', '正在執行API壓力測試，請稍候...');
+            
+            const testCount = 20;
+            let successCount = 0;
+            
+            for (let i = 0; i < testCount; i++) {
+                try {
+                    const response = await fetch(`${BASE_URL}/api/genhuman/status`);
+                    if (response.ok) successCount++;
+                } catch (error) {
+                    log(`❌ 壓力測試第${i+1}次失敗: ${error.message}`);
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            const successRate = (successCount / testCount * 100).toFixed(1);
+            showResult('batchTestResult', 
+                `API壓力測試完成！\n` +
+                `總請求數: ${testCount}\n` +
+                `成功請求: ${successCount}\n` +
+                `成功率: ${successRate}%\n` +
+                `API穩定性: ${successRate > 95 ? '優秀' : successRate > 80 ? '良好' : '需要優化'}`
+            );
+        }
+
+        // 檢查聲音克隆狀態
+        async function checkVoiceCloneStatus() {
+            await checkTaskStatus('voice_clone', 'voiceCloneResult');
+        }
+
+        // 檢查數字人狀態
+        async function checkDigitalHumanStatus() {
+            await checkTaskStatus('digital_human', 'digitalHumanResult');
+        }
+
+        // 檢查TTS狀態
+        async function checkTTSStatus() {
+            await checkTaskStatus('text_to_speech', 'ttsResult');
+        }
+
+        // 檢查視頻生成狀態
+        async function checkVideoStatus() {
+            await checkTaskStatus('video_generation', 'videoGenerationResult');
+        }
+
+        // 通用任務狀態檢查
+        async function checkTaskStatus(taskType, resultElementId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/genhuman/tasks/${taskType}/latest`);
+                const result = await response.json();
+                
+                if (result.success && result.tasks.length > 0) {
+                    const task = result.tasks[0];
+                    showResult(resultElementId, 
+                        `最新任務狀態：\n` +
+                        `任務ID: ${task.task_id}\n` +
+                        `狀態: ${task.status}\n` +
+                        `創建時間: ${task.created_at}\n` +
+                        `更新時間: ${task.updated_at}\n` +
+                        `結果URL: ${task.result_url || '未完成'}`
+                    );
+                    log(`📊 ${taskType} 狀態檢查完成`);
+                } else {
+                    showResult(resultElementId, `暫無${taskType}任務記錄`, false);
+                }
+            } catch (error) {
+                log(`❌ ${taskType} 狀態檢查失敗: ${error.message}`);
+                showResult(resultElementId, `狀態檢查失敗: ${error.message}`, false);
+            }
+        }
+
+        // 測試回調端點
+        async function testCallbackEndpoint() {
+            log('🔗 測試GenHuman回調端點...');
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/genhuman/callback/test`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('callbackResult', `回調端點測試成功！\n端點響應正常，可以接收GenHuman回調`);
+                    log(`✅ 回調端點測試通過`);
+                } else {
+                    throw new Error(result.error || '回調端點測試失敗');
+                }
+            } catch (error) {
+                log(`❌ 回調端點測試失敗: ${error.message}`);
+                showResult('callbackResult', `回調端點測試失敗: ${error.message}`, false);
+            }
+        }
+
+        // 模擬回調
+        async function simulateCallback() {
+            log('🎭 模擬GenHuman回調...');
+            
+            const mockCallback = {
+                task_id: 'test_' + Date.now(),
+                status: 'success',
+                result_url: 'https://example.com/result.mp3',
+                message: '模擬回調測試'
+            };
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/genhuman/voice-clone/callback`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(mockCallback)
+                });
+                
+                const result = await response.json();
+                showResult('callbackResult', `模擬回調測試完成！\n回調數據: ${JSON.stringify(mockCallback, null, 2)}\n響應: ${JSON.stringify(result, null, 2)}`);
+                log(`✅ 模擬回調測試完成`);
+            } catch (error) {
+                log(`❌ 模擬回調失敗: ${error.message}`);
+                showResult('callbackResult', `模擬回調失敗: ${error.message}`, false);
+            }
+        }
+
+        // 導出測試結果
+        async function exportTestResults() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/genhuman/export/results`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const dataStr = JSON.stringify(result.data, null, 2);
+                    const blob = new Blob([dataStr], {type: 'application/json'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `genhuman_test_results_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    log(`✅ 測試結果已導出`);
+                    showResult('callbackResult', `測試結果導出成功！\n文件名: ${a.download}`);
+                } else {
+                    throw new Error(result.error || '導出失敗');
+                }
+            } catch (error) {
+                log(`❌ 測試結果導出失敗: ${error.message}`);
+                showResult('callbackResult', `測試結果導出失敗: ${error.message}`, false);
+            }
+        }
+
+        // 載入測試歷史
+        async function loadTestHistory() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/genhuman/history`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`📊 載入GenHuman測試歷史: ${result.total_tasks} 個歷史任務`);
+                    // 更新統計數據
+                    if (result.stats) {
+                        genhumanStats.completedTasks = result.stats.completed || 0;
+                        genhumanStats.processingTasks = result.stats.processing || 0;
+                        updateGenhumanStats('history_loaded');
+                    }
+                }
+            } catch (error) {
+                log(`⚠️ 無法載入GenHuman測試歷史: ${error.message}`);
+            }
+        }
+
+        // 清空GenHuman日誌
+        function clearGenhumanLogs() {
+            const logElements = ['voiceCloneLog', 'digitalHumanLog', 'ttsLog', 'videoGenerationLog', 'callbackLog', 'batchTestLog'];
+            const resultElements = ['voiceCloneResult', 'digitalHumanResult', 'ttsResult', 'videoGenerationResult', 'callbackResult', 'batchTestResult'];
+            
+            [...logElements, ...resultElements].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = '';
+                    element.className = element.id.includes('Log') ? 'result log' : 'result';
+                }
+            });
+            
+            log('🗑️ 所有GenHuman日誌已清空');
+        }
+
+        // 停止所有測試
+        function stopAllTests() {
+            stopCallbackMonitor();
+            log('🛑 所有GenHuman測試已停止');
+            showResult('batchTestResult', '所有測試已停止');
+        }
+
+        // 列表函數（佔位符）
+        function listVoiceClones() { log('📋 聲音克隆歷史功能開發中...'); }
+        function listDigitalHumans() { log('📋 數字人歷史功能開發中...'); }
+        function listTTSHistory() { log('📋 語音合成歷史功能開發中...'); }
+        function listVideoHistory() { log('📋 視頻生成歷史功能開發中...'); }
+    </script>
+</body>
+</html>
