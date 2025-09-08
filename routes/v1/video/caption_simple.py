@@ -105,3 +105,4 @@ def caption_video_simple():
         return jsonify({"message": f"Video caption simulation failed: {e}", "status": "error"}), 500
 
 
+

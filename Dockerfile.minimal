@@ -50,3 +50,4 @@ HEALTHCHECK --interval=60s --timeout=5s --start-period=30s --retries=2 \
 
 # Simple startup command
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "300", "app:app"]
+

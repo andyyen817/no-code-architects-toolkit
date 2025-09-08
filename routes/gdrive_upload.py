@@ -23,8 +23,14 @@ import threading
 import requests
 import uuid
 import json
-from google.oauth2.service_account import Credentials
-from google.auth.transport.requests import Request
+# Google OAuth2 dependencies - conditional import
+try:
+    from google.oauth2.service_account import Credentials
+    from google.auth.transport.requests import Request
+    GOOGLE_AUTH_AVAILABLE = True
+except ImportError:
+    GOOGLE_AUTH_AVAILABLE = False
+    logger.warning("Google OAuth2 not available - gdrive upload disabled")
 from datetime import datetime
 import time
 # import psutil  # Removed for Zeabur deployment compatibility
@@ -61,6 +67,9 @@ def get_access_token():
     """
     Retrieves an access token for Google APIs using service account credentials.
     """
+    if not GOOGLE_AUTH_AVAILABLE:
+        raise ImportError("Google OAuth2 dependencies not available")
+    
     credentials_info = json.loads(GCP_SA_CREDENTIALS)
     credentials = Credentials.from_service_account_info(
         credentials_info,

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No-Code Architects Toolkit - 雲端測試中心 (修復版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .response-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">🎬 No-Code Architects Toolkit</h1>
+            <p class="text-gray-600">雲端測試介面 - 使用本地成功的API端點</p>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">API 基礎地址:</label>
+                <input type="text" id="baseUrl" value="https://vidsparkback.zeabur.app" 
+                       class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">API Key:</label>
+                <input type="text" id="apiKey" value="production-api-key-2024" 
+                       class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+
+        <!-- Status Check -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">🔍 服務狀態檢查</h2>
+            <button onclick="checkStatus()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
+                檢查服務狀態
+            </button>
+            <button onclick="checkHealth()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                健康檢查
+            </button>
+            <div id="statusResult" class="mt-4"></div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-lg shadow-md mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8 px-6">
+                    <button onclick="showTab('video')" class="tab-btn active py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                        影片處理
+                    </button>
+                    <button onclick="showTab('audio')" class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                        音頻處理
+                    </button>
+                    <button onclick="showTab('subtitle')" class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                        字幕生成
+                    </button>
+                    <button onclick="showTab('image')" class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                        圖像處理
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Video Tab -->
+            <div id="video-tab" class="tab-content p-6">
+                <h3 class="text-lg font-semibold mb-4">🎬 影片處理功能</h3>
+                
+                <!-- Video Cut -->
+                <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-medium mb-3">影片剪輯 (/v1/video/cut)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">影片URL:</label>
+                            <input type="url" id="cutVideoUrl" 
+                                   placeholder="https://sample-videos.com/zip/10/mp4/SampleVideo_720x480_1mb.mp4"
+                                   class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">剪輯時間 (開始-結束):</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="cutStart" placeholder="00:00:01" class="flex-1 p-2 border border-gray-300 rounded-md text-sm">
+                                <input type="text" id="cutEnd" placeholder="00:00:10" class="flex-1 p-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="testVideoCut()" class="mt-3 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        測試影片剪輯
+                    </button>
+                    <div id="cutResult" class="mt-3"></div>
+                </div>
+
+                <!-- Video Trim -->
+                <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-medium mb-3">影片修剪 (/v1/video/trim)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">影片URL:</label>
+                            <input type="url" id="trimVideoUrl" 
+                                   placeholder="https://sample-videos.com/zip/10/mp4/SampleVideo_720x480_1mb.mp4"
+                                   class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">開始時間:</label>
+                            <input type="text" id="trimStart" placeholder="00:00:00" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">結束時間:</label>
+                            <input type="text" id="trimEnd" placeholder="00:00:10" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                    </div>
+                    <button onclick="testVideoTrim()" class="mt-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        測試影片修剪
+                    </button>
+                    <div id="trimResult" class="mt-3"></div>
+                </div>
+
+                <!-- Video Thumbnail -->
+                <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-medium mb-3">縮圖生成 (/v1/video/thumbnail)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">影片URL:</label>
+                            <input type="url" id="thumbnailVideoUrl" 
+                                   placeholder="https://sample-videos.com/zip/10/mp4/SampleVideo_720x480_1mb.mp4"
+                                   class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">時間點 (HH:MM:SS):</label>
+                            <input type="text" id="thumbnailTime" placeholder="00:00:05" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                    </div>
+                    <button onclick="testVideoThumbnail()" class="mt-3 bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        生成縮圖
+                    </button>
+                    <div id="thumbnailResult" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Audio Tab -->
+            <div id="audio-tab" class="tab-content p-6 hidden">
+                <h3 class="text-lg font-semibold mb-4">🎵 音頻處理功能</h3>
+                
+                <!-- Audio Concatenate -->
+                <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-medium mb-3">音頻合併 (/v1/audio/concatenate)</h4>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">音頻URL列表 (每行一個):</label>
+                        <textarea id="audioUrls" rows="4" 
+                                  placeholder="https://example.com/audio1.mp3&#10;https://example.com/audio2.mp3"
+                                  class="w-full p-2 border border-gray-300 rounded-md text-sm"></textarea>
+                    </div>
+                    <button onclick="testAudioConcatenate()" class="mt-3 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        測試音頻合併
+                    </button>
+                    <div id="audioResult" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Subtitle Tab -->
+            <div id="subtitle-tab" class="tab-content p-6 hidden">
+                <h3 class="text-lg font-semibold mb-4">📝 字幕生成功能</h3>
+                
+                <!-- Media Transcribe -->
+                <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-medium mb-3">音頻轉錄 (/v1/media/transcribe)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">媒體URL:</label>
+                            <input type="url" id="transcribeUrl" 
+                                   placeholder="https://example.com/audio.mp3"
+                                   class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">語言:</label>
+                            <select id="transcribeLanguage" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">自動檢測</option>
+                                <option value="zh">中文</option>
+                                <option value="en">英文</option>
+                                <option value="ja">日文</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="includeText" checked class="mr-2"> 包含文本
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="includeSrt" checked class="mr-2"> 包含SRT
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="includeSegments" class="mr-2"> 包含片段
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="wordTimestamps" class="mr-2"> 詞級時間戳
+                        </label>
+                    </div>
+                    <button onclick="testTranscribe()" class="mt-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        測試音頻轉錄
+                    </button>
+                    <div id="transcribeResult" class="mt-3"></div>
+                </div>
+
+                <!-- Video Caption -->
+                <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-medium mb-3">影片字幕 (/v1/video/caption)</h4>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">影片URL:</label>
+                            <input type="url" id="captionVideoUrl" 
+                                   placeholder="https://sample-videos.com/zip/10/mp4/SampleVideo_720x480_1mb.mp4"
+                                   class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">字幕文本 (可選，留空自動生成):</label>
+                            <textarea id="captionText" rows="3" 
+                                      placeholder="可選：手動輸入字幕文本"
+                                      class="w-full p-2 border border-gray-300 rounded-md text-sm"></textarea>
+                        </div>
+                    </div>
+                    <button onclick="testVideoCaption()" class="mt-3 bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        生成影片字幕
+                    </button>
+                    <div id="captionResult" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Image Tab -->
+            <div id="image-tab" class="tab-content p-6 hidden">
+                <h3 class="text-lg font-semibold mb-4">🖼️ 圖像處理功能</h3>
+                
+                <!-- Image to Video -->
+                <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-medium mb-3">圖片轉影片 (/v1/image/convert/video)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">圖片URL:</label>
+                            <input type="url" id="imageVideoUrl" 
+                                   placeholder="https://example.com/image.jpg"
+                                   class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">影片長度 (秒):</label>
+                            <input type="number" id="videoDuration" value="5" min="1" max="30" 
+                                   class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">縮放效果:</label>
+                            <select id="zoomEffect" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                                <option value="none">無</option>
+                                <option value="slow">慢速縮放</option>
+                                <option value="medium">中速縮放</option>
+                                <option value="fast">快速縮放</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="testImageToVideo()" class="mt-3 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        生成影片
+                    </button>
+                    <div id="imageVideoResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Status Check -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">📊 任務狀態查詢</h2>
+            <div class="flex gap-4">
+                <input type="text" id="jobId" placeholder="輸入任務ID" 
+                       class="flex-1 p-2 border border-gray-300 rounded-md">
+                <button onclick="checkJobStatus()" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                    查詢狀態
+                </button>
+            </div>
+            <div id="jobStatusResult" class="mt-4"></div>
+        </div>
+    </div>
+
+    <script>
+        // API調用基礎函數
+        function makeApiCall(endpoint, method = 'GET', data = null) {
+            const baseUrl = $('#baseUrl').val();
+            const apiKey = $('#apiKey').val();
+            
+            console.log(`🚀 API調用: ${method} ${baseUrl}${endpoint}`);
+            console.log(`📊 數據:`, data);
+            
+            const config = {
+                url: baseUrl + endpoint,
+                method: method,
+                headers: {
+                    'x-api-key': apiKey,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 120000
+            };
+            
+            if (data) {
+                config.data = JSON.stringify(data);
+            }
+            
+            return $.ajax(config);
+        }
+
+        // 顯示結果
+        function showResult(containerId, data, isError = false) {
+            const container = $('#' + containerId);
+            const bgColor = isError ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200';
+            const textColor = isError ? 'text-red-800' : 'text-green-800';
+            
+            container.removeClass('loading');
+            container.html(`
+                <div class="response-container p-4 rounded-md border ${bgColor} ${textColor}">
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `);
+        }
+
+        // 顯示載入狀態
+        function showLoading(containerId) {
+            const container = $('#' + containerId);
+            container.addClass('loading');
+            container.html(`
+                <div class="response-container p-4 rounded-md border bg-blue-50 border-blue-200 text-blue-800">
+                    <p>🔄 處理中，請稍候...</p>
+                </div>
+            `);
+        }
+
+        // Tab功能
+        function showTab(tabName) {
+            $('.tab-content').addClass('hidden');
+            $('#' + tabName + '-tab').removeClass('hidden');
+            
+            $('.tab-btn').removeClass('active border-blue-500 text-blue-600').addClass('border-transparent text-gray-500');
+            $('button[onclick="showTab(\'' + tabName + '\')"]').removeClass('border-transparent text-gray-500').addClass('active border-blue-500 text-blue-600');
+        }
+
+        // 服務狀態檢查
+        function checkStatus() {
+            showLoading('statusResult');
+            makeApiCall('/v1/toolkit/test')
+                .done(data => showResult('statusResult', data))
+                .fail(xhr => showResult('statusResult', {error: xhr.responseText || '連接失敗'}, true));
+        }
+
+        // 健康檢查
+        function checkHealth() {
+            showLoading('statusResult');
+            makeApiCall('/health')
+                .done(data => showResult('statusResult', data))
+                .fail(xhr => showResult('statusResult', {error: xhr.responseText || '連接失敗'}, true));
+        }
+
+        // 影片剪輯測試
+        function testVideoCut() {
+            const videoUrl = $('#cutVideoUrl').val();
+            const start = $('#cutStart').val();
+            const end = $('#cutEnd').val();
+            
+            if (!videoUrl || !start || !end) {
+                alert('請填寫所有必要欄位');
+                return;
+            }
+            
+            showLoading('cutResult');
+            const data = {
+                video_url: videoUrl,
+                start_time: start,
+                end_time: end
+            };
+            
+            makeApiCall('/v1/video/cut', 'POST', data)
+                .done(data => showResult('cutResult', data))
+                .fail(xhr => showResult('cutResult', {error: xhr.responseText || '請求失敗'}, true));
+        }
+
+        // 影片修剪測試
+        function testVideoTrim() {
+            const videoUrl = $('#trimVideoUrl').val();
+            const start = $('#trimStart').val();
+            const end = $('#trimEnd').val();
+            
+            if (!videoUrl) {
+                alert('請輸入影片URL');
+                return;
+            }
+            
+            showLoading('trimResult');
+            const data = {
+                video_url: videoUrl,
+                start_time: start || '00:00:00',
+                end_time: end || '00:00:10'
+            };
+            
+            makeApiCall('/v1/video/trim', 'POST', data)
+                .done(data => showResult('trimResult', data))
+                .fail(xhr => showResult('trimResult', {error: xhr.responseText || '請求失敗'}, true));
+        }
+
+        // 縮圖生成測試
+        function testVideoThumbnail() {
+            const videoUrl = $('#thumbnailVideoUrl').val();
+            const time = $('#thumbnailTime').val();
+            
+            if (!videoUrl || !time) {
+                alert('請填寫所有必要欄位');
+                return;
+            }
+            
+            showLoading('thumbnailResult');
+            const data = {
+                video_url: videoUrl,
+                timestamp: time
+            };
+            
+            makeApiCall('/v1/video/thumbnail', 'POST', data)
+                .done(data => showResult('thumbnailResult', data))
+                .fail(xhr => showResult('thumbnailResult', {error: xhr.responseText || '請求失敗'}, true));
+        }
+
+        // 音頻合併測試
+        function testAudioConcatenate() {
+            const urlsText = $('#audioUrls').val();
+            const urls = urlsText.split('\n').filter(url => url.trim());
+            
+            if (urls.length < 2) {
+                alert('請至少輸入兩個音頻URL');
+                return;
+            }
+            
+            showLoading('audioResult');
+            const data = {
+                audio_urls: urls
+            };
+            
+            makeApiCall('/v1/audio/concatenate', 'POST', data)
+                .done(data => showResult('audioResult', data))
+                .fail(xhr => showResult('audioResult', {error: xhr.responseText || '請求失敗'}, true));
+        }
+
+        // 音頻轉錄測試
+        function testTranscribe() {
+            const url = $('#transcribeUrl').val();
+            const language = $('#transcribeLanguage').val();
+            
+            if (!url) {
+                alert('請輸入媒體URL');
+                return;
+            }
+            
+            showLoading('transcribeResult');
+            const data = {
+                media_url: url,
+                language: language || undefined,
+                include_text: $('#includeText').is(':checked'),
+                include_srt: $('#includeSrt').is(':checked'),
+                include_segments: $('#includeSegments').is(':checked'),
+                word_timestamps: $('#wordTimestamps').is(':checked')
+            };
+            
+            makeApiCall('/v1/media/transcribe', 'POST', data)
+                .done(data => showResult('transcribeResult', data))
+                .fail(xhr => showResult('transcribeResult', {error: xhr.responseText || '請求失敗'}, true));
+        }
+
+        // 影片字幕測試
+        function testVideoCaption() {
+            const videoUrl = $('#captionVideoUrl').val();
+            const text = $('#captionText').val();
+            
+            if (!videoUrl) {
+                alert('請輸入影片URL');
+                return;
+            }
+            
+            showLoading('captionResult');
+            const data = {
+                video_url: videoUrl,
+                captions: text || undefined
+            };
+            
+            makeApiCall('/v1/video/caption', 'POST', data)
+                .done(data => showResult('captionResult', data))
+                .fail(xhr => showResult('captionResult', {error: xhr.responseText || '請求失敗'}, true));
+        }
+
+        // 圖片轉影片測試
+        function testImageToVideo() {
+            const imageUrl = $('#imageVideoUrl').val();
+            const duration = $('#videoDuration').val();
+            const zoom = $('#zoomEffect').val();
+            
+            if (!imageUrl) {
+                alert('請輸入圖片URL');
+                return;
+            }
+            
+            showLoading('imageVideoResult');
+            const data = {
+                image_url: imageUrl,
+                duration: parseInt(duration),
+                zoom_effect: zoom
+            };
+            
+            makeApiCall('/v1/image/convert/video', 'POST', data)
+                .done(data => showResult('imageVideoResult', data))
+                .fail(xhr => showResult('imageVideoResult', {error: xhr.responseText || '請求失敗'}, true));
+        }
+
+        // 任務狀態查詢
+        function checkJobStatus() {
+            const jobId = $('#jobId').val();
+            
+            if (!jobId) {
+                alert('請輸入任務ID');
+                return;
+            }
+            
+            showLoading('jobStatusResult');
+            makeApiCall(`/v1/job/status/${jobId}`)
+                .done(data => showResult('jobStatusResult', data))
+                .fail(xhr => showResult('jobStatusResult', {error: xhr.responseText || '查詢失敗'}, true));
+        }
+
+        // 初始化
+        $(document).ready(function() {
+            console.log('🚀 No-Code Architects Toolkit 雲端測試中心已載入');
+            console.log('🔗 使用本地成功的API端點');
+            
+            // 自動檢查健康狀態
+            checkHealth();
+        });
+    </script>
+</body>
+</html>
