@@ -20,8 +20,8 @@ ffmpeg-python==0.2.0
 Pillow>=8.0.0
 
 # Utilities
-psutil==5.9.0
 srt==3.5.3
+# psutil==5.9.0  # Removed due to gcc dependency in slim containers
 
 # Optional (for enhanced features)
 # Note: These will be installed if available, skipped if not

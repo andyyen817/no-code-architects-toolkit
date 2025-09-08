@@ -27,7 +27,7 @@ from google.oauth2.service_account import Credentials
 from google.auth.transport.requests import Request
 from datetime import datetime
 import time
-import psutil
+# import psutil  # Removed for Zeabur deployment compatibility
 from services.authentication import authenticate
 from app_utils import validate_payload, queue_task_wrapper
 
@@ -228,9 +228,9 @@ def log_system_resources():
     Logs system resource usage and upload progress at regular intervals.
     """
     while True:
-        # Get memory and disk usage
-        memory_info = psutil.virtual_memory()
-        disk_info = psutil.disk_usage('/')
+        # Simplified logging without psutil for Zeabur compatibility
+        # memory_info = psutil.virtual_memory()
+        # disk_info = psutil.disk_usage('/')
 
         with uploads_lock:
             for progress in active_uploads:
