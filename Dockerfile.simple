@@ -62,3 +62,6 @@ gunicorn --bind 0.0.0.0:8080 \
 # Run the app
 CMD ["/app/run_simple.sh"]
 
+
+
+

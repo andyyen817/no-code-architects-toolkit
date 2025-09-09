@@ -78,6 +78,31 @@ class DatabaseLogger:
                 connection.commit()
                 self.table_created = True
                 logger.info("✅ 數據庫表創建成功: nca_api_logs")
+                
+                # 🚨 新增：創建文件上傳記錄表
+                files_table_sql = """
+                CREATE TABLE IF NOT EXISTS `nca_uploaded_files` (
+                    `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+                    `file_id` varchar(36) NOT NULL UNIQUE COMMENT 'UUID文件ID',
+                    `original_filename` varchar(255) NOT NULL COMMENT '原始文件名',
+                    `safe_filename` varchar(255) NOT NULL COMMENT '安全文件名',
+                    `file_type` enum('audio','video') NOT NULL COMMENT '文件類型',
+                    `file_size` bigint NOT NULL COMMENT '文件大小(字節)',
+                    `file_path` varchar(500) NOT NULL COMMENT '本地文件路徑',
+                    `file_url` varchar(500) NOT NULL COMMENT '外部訪問URL',
+                    `upload_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `idx_file_id` (`file_id`),
+                    KEY `idx_file_type` (`file_type`),
+                    KEY `idx_upload_time` (`upload_time`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='上傳文件記錄表'
+                """
+                cursor.execute(files_table_sql)
+                connection.commit()
+                logger.info("✅ 數據庫表創建成功: nca_uploaded_files")
+                
                 return True
                 
         except Exception as e:
@@ -237,3 +262,129 @@ class DatabaseLogger:
 
 # 創建全局實例
 database_logger = DatabaseLogger()
+
+# 🚨 新增：文件上傳相關功能
+class FileUploadLogger:
+    """文件上傳記錄器"""
+    
+    def log_file_upload(self, file_record):
+        """
+        記錄文件上傳到數據庫
+        
+        Args:
+            file_record (dict): 文件記錄包含:
+                - file_id: UUID文件ID
+                - original_filename: 原始文件名
+                - safe_filename: 安全文件名
+                - file_type: 文件類型 (audio/video)
+                - file_size: 文件大小(字節)
+                - file_path: 本地文件路徑
+                - file_url: 外部訪問URL
+                - upload_time: 上傳時間
+        """
+        if not PYMYSQL_AVAILABLE:
+            logger.info(f"📋 文件上傳記錄 (本地): {file_record['original_filename']}")
+            return True
+        
+        # 確保表存在
+        if not database_logger.create_table_if_not_exists():
+            return False
+        
+        try:
+            connection = database_logger.get_connection()
+            if not connection:
+                return False
+            
+            with connection.cursor() as cursor:
+                insert_sql = """
+                INSERT INTO `nca_uploaded_files` (
+                    `file_id`, `original_filename`, `safe_filename`, `file_type`,
+                    `file_size`, `file_path`, `file_url`, `upload_time`
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                
+                cursor.execute(insert_sql, (
+                    file_record['file_id'],
+                    file_record['original_filename'],
+                    file_record['safe_filename'],
+                    file_record['file_type'],
+                    file_record['file_size'],
+                    file_record['file_path'],
+                    file_record['file_url'],
+                    file_record['upload_time']
+                ))
+                connection.commit()
+                
+                record_id = cursor.lastrowid
+                logger.info(f"✅ 文件上傳已記錄到數據庫 (ID: {record_id}): {file_record['original_filename']}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"記錄文件上傳失敗: {e}")
+            return False
+        finally:
+            if 'connection' in locals():
+                connection.close()
+    
+    def get_uploaded_files(self, limit=20, file_type=None):
+        """
+        獲取上傳文件列表
+        
+        Args:
+            limit (int): 返回數量限制
+            file_type (str): 文件類型過濾 (audio/video)
+            
+        Returns:
+            list: 文件記錄列表
+        """
+        if not PYMYSQL_AVAILABLE:
+            return []
+        
+        try:
+            connection = database_logger.get_connection()
+            if not connection:
+                return []
+            
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                if file_type:
+                    select_sql = """
+                    SELECT * FROM `nca_uploaded_files` 
+                    WHERE `file_type` = %s
+                    ORDER BY `upload_time` DESC 
+                    LIMIT %s
+                    """
+                    cursor.execute(select_sql, (file_type, limit))
+                else:
+                    select_sql = """
+                    SELECT * FROM `nca_uploaded_files` 
+                    ORDER BY `upload_time` DESC 
+                    LIMIT %s
+                    """
+                    cursor.execute(select_sql, (limit,))
+                
+                results = cursor.fetchall()
+                
+                # 轉換時間為字符串
+                for result in results:
+                    if 'upload_time' in result:
+                        result['upload_time'] = result['upload_time'].strftime('%Y-%m-%d %H:%M:%S')
+                    if 'created_at' in result:
+                        result['created_at'] = result['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                    if 'updated_at' in result:
+                        result['updated_at'] = result['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+                
+                return results
+                
+        except Exception as e:
+            logger.error(f"獲取上傳文件列表失敗: {e}")
+            return []
+        finally:
+            if 'connection' in locals():
+                connection.close()
+
+# 將方法添加到主記錄器中
+database_logger.log_file_upload = FileUploadLogger().log_file_upload
+database_logger.get_uploaded_files = FileUploadLogger().get_uploaded_files
+
+
+

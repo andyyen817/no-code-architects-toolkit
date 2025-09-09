@@ -47,3 +47,6 @@ NEXT STEPS:
 3. Monitor for successful image pull
 4. Verify application accessibility
 
+
+
+
