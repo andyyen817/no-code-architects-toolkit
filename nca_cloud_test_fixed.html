@@ -43,8 +43,17 @@
             <button onclick="checkStatus()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
                 檢查服務狀態
             </button>
-            <button onclick="checkHealth()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            <button onclick="checkHealth()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2">
                 健康檢查
+            </button>
+            <button onclick="testDatabase()" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mr-2">
+                數據庫測試
+            </button>
+            <button onclick="initDatabase()" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded mr-2">
+                初始化數據庫
+            </button>
+            <button onclick="getDatabaseStats()" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                數據庫統計
             </button>
             <div id="statusResult" class="mt-4"></div>
         </div>
@@ -283,13 +292,17 @@
     </div>
 
     <script>
-        // API調用基礎函數
+        // API調用基礎函數 - 增強版控制台日誌
         function makeApiCall(endpoint, method = 'GET', data = null) {
             const baseUrl = $('#baseUrl').val();
             const apiKey = $('#apiKey').val();
+            const startTime = Date.now();
+            const currentTime = new Date().toLocaleTimeString();
             
-            console.log(`🚀 API調用: ${method} ${baseUrl}${endpoint}`);
-            console.log(`📊 數據:`, data);
+            // 🚨 詳細控制台日誌 - API調用開始
+            console.log(`[${currentTime}] 🚀 API調用: ${method} ${baseUrl}${endpoint}`);
+            console.log(`[${currentTime}] 📊 數據:`, data);
+            console.log(`[${currentTime}] 🔑 API Key:`, apiKey ? '已設置' : '未設置');
             
             const config = {
                 url: baseUrl + endpoint,
@@ -298,14 +311,60 @@
                     'x-api-key': apiKey,
                     'Content-Type': 'application/json'
                 },
-                timeout: 120000
+                timeout: 120000,
+                success: function(response) {
+                    const endTime = Date.now();
+                    const responseTime = endTime - startTime;
+                    const endTimeStr = new Date().toLocaleTimeString();
+                    
+                    console.log(`[${endTimeStr}] ✅ API調用成功 (${responseTime}ms):`);
+                    console.log(`[${endTimeStr}] 📊 響應大小:`, JSON.stringify(response).length, '字符');
+                    console.log(`[${endTimeStr}] 📊 響應內容:`, response);
+                    
+                    // 如果是文件相關響應，額外記錄文件信息
+                    if (response && response.file_url) {
+                        console.log(`[${endTimeStr}] 📁 文件URL:`, response.file_url);
+                        console.log(`[${endTimeStr}] 📦 文件大小:`, response.file_size || '未知');
+                        // 測試文件URL可訪問性
+                        testFileAccess(response.file_url);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    const endTime = Date.now();
+                    const responseTime = endTime - startTime;
+                    const endTimeStr = new Date().toLocaleTimeString();
+                    
+                    console.log(`[${endTimeStr}] ❌ API調用失敗 (${responseTime}ms):`);
+                    console.log(`[${endTimeStr}] 📊 HTTP狀態:`, xhr.status);
+                    console.log(`[${endTimeStr}] 📊 錯誤類型:`, status);
+                    console.log(`[${endTimeStr}] 📊 錯誤詳情:`, error);
+                    console.log(`[${endTimeStr}] 📊 響應頭:`, xhr.getAllResponseHeaders());
+                    console.log(`[${endTimeStr}] 📊 響應文本:`, xhr.responseText);
+                }
             };
             
             if (data) {
                 config.data = JSON.stringify(data);
+                console.log(`[${currentTime}] 📤 發送數據大小:`, JSON.stringify(data).length, '字符');
             }
             
             return $.ajax(config);
+        }
+        
+        // 測試文件URL可訪問性
+        function testFileAccess(fileUrl) {
+            const testTime = new Date().toLocaleTimeString();
+            console.log(`[${testTime}] 🔍 測試文件可訪問性:`, fileUrl);
+            
+            fetch(fileUrl, { method: 'HEAD' })
+                .then(response => {
+                    console.log(`[${testTime}] ✅ 文件可訪問:`, response.status, response.statusText);
+                    console.log(`[${testTime}] 📊 Content-Type:`, response.headers.get('Content-Type'));
+                    console.log(`[${testTime}] 📦 Content-Length:`, response.headers.get('Content-Length'));
+                })
+                .catch(error => {
+                    console.log(`[${testTime}] ❌ 文件無法訪問:`, error.message);
+                });
         }
 
         // 顯示結果
