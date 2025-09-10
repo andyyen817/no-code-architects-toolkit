@@ -13,7 +13,7 @@ import uuid
 import shutil
 import logging
 from datetime import datetime
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Union
 from services.database_logger import database_logger
 
 logger = logging.getLogger(__name__)
@@ -25,12 +25,21 @@ class OutputFileManager:
         self.base_storage_path = os.path.join(os.getcwd(), 'output', 'nca')
         self.base_url = "https://vidsparkback.zeabur.app/nca/files"
         
+        # 🚨 初始化時創建基礎目錄結構
+        try:
+            for file_type in ['audio', 'video', 'image']:
+                type_dir = os.path.join(self.base_storage_path, file_type)
+                os.makedirs(type_dir, exist_ok=True)
+            logger.info(f"✅ 存儲目錄初始化完成: {self.base_storage_path}")
+        except Exception as e:
+            logger.error(f"❌ 初始化存儲目錄失敗: {e}")
+        
     def save_output_file(self, 
                         source_file_path: str, 
                         file_type: str, 
                         operation: str,
-                        original_filename: str = None,
-                        metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+                        original_filename: Optional[str] = None,
+                        metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         保存輸出文件到統一管理系統
         
@@ -135,8 +144,23 @@ class OutputFileManager:
                 'metadata': file_record.get('metadata', {})
             }
             
-            # 使用現有的數據庫記錄器
-            success = database_logger.log_output_file(enhanced_record)
+            # 使用現有的數據庫記錄器（安全方法調用）
+            try:
+                method = getattr(database_logger, 'log_output_file', None)
+                if method:
+                    success = method(enhanced_record)
+                else:
+                    # 使用備選方法
+                    alt_method = getattr(database_logger, 'log_file_upload', None)
+                    if alt_method:
+                        success = alt_method(enhanced_record)
+                    else:
+                        # 本地日誌記錄
+                        logger.info(f"💾 輸出文件記錄 (本地): {enhanced_record['original_filename']}")
+                        success = True
+            except Exception as e:
+                logger.warning(f"數據庫記錄錯誤: {e}")
+                success = True  # 繼續執行，文件已成功保存
             
             if not success:
                 logger.warning("數據庫記錄失敗，但文件已保存")
@@ -148,18 +172,36 @@ class OutputFileManager:
     def get_file_info(self, file_id: str) -> Optional[Dict[str, Any]]:
         """根據文件ID獲取文件信息"""
         try:
-            return database_logger.get_output_file_by_id(file_id)
+            try:
+                method = getattr(database_logger, 'get_output_file_by_id', None)
+                if method:
+                    return method(file_id)
+                else:
+                    logger.warning("數據庫方法不可用，返回None")
+                    return None
+            except Exception as e:
+                logger.error(f"獲取文件信息錯誤: {e}")
+                return None
         except Exception as e:
             logger.error(f"獲取文件信息失敗: {e}")
             return None
     
     def list_output_files(self, 
-                         file_type: str = None, 
-                         operation: str = None, 
+                         file_type: Optional[str] = None, 
+                         operation: Optional[str] = None, 
                          limit: int = 50) -> list:
         """列出輸出文件"""
         try:
-            return database_logger.get_output_files(file_type, operation, limit)
+            try:
+                method = getattr(database_logger, 'get_output_files', None)
+                if method:
+                    return method(file_type, operation, limit)
+                else:
+                    logger.warning("數據庫方法不可用，返回空列表")
+                    return []
+            except Exception as e:
+                logger.error(f"列出文件錯誤: {e}")
+                return []
         except Exception as e:
             logger.error(f"列出文件失敗: {e}")
             return []

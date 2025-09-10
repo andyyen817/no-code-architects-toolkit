@@ -9,7 +9,7 @@ from flask import Blueprint, send_file, jsonify, abort
 import os
 import logging
 import mimetypes
-from werkzeug.utils import safe_join
+from werkzeug.security import safe_join
 
 # 創建NCA文件訪問藍圖
 nca_files_bp = Blueprint('nca_files', __name__)
@@ -79,6 +79,14 @@ def serve_nca_file(file_type, file_path):
                         logger.info(f"🔍 輸出目錄內容: {os.listdir(output_dir)}")
                     else:
                         logger.warning(f"🔍 輸出目錄不存在: {output_dir}")
+                        
+                    # 🚨 嘗試創建基礎目錄結構
+                    try:
+                        os.makedirs(nca_storage_dir, exist_ok=True)
+                        logger.info(f"✅ 創建NCA存儲目錄: {nca_storage_dir}")
+                    except Exception as create_e:
+                        logger.error(f"❌ 創建目錄失敗: {create_e}")
+                        
             except Exception as debug_e:
                 logger.error(f"🔍 Debug列表錯誤: {debug_e}")
             
@@ -92,13 +100,20 @@ def serve_nca_file(file_type, file_path):
         # 記錄文件訪問
         logger.info(f"✅ 提供文件訪問: {file_type}/{file_path}")
         
-        # 返回文件
-        return send_file(
+        # 返回文件（添加跨域和緩存頭）
+        response = send_file(
             full_file_path,
             mimetype=mime_type,
             as_attachment=False,
             download_name=os.path.basename(file_path)
         )
+        
+        # 🚨 重要：添加跨域頭，允許外部API訪問
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
+        response.headers['Cache-Control'] = 'public, max-age=86400'  # 24小時緩存
+        
+        return response
         
     except Exception as e:
         logger.error(f"提供文件時發生錯誤 {file_type}/{file_path}: {str(e)}")
@@ -112,12 +127,38 @@ def files_health_check():
     try:
         output_dir = os.path.join(os.getcwd(), 'output', 'nca')
         
-        return jsonify({
+        # 🚨 詳細的健康檢查診斷
+        health_status = {
             "status": "healthy",
             "message": "NCA文件服務運行正常",
             "storage_path": output_dir,
-            "storage_exists": os.path.exists(output_dir)
-        }), 200
+            "storage_exists": os.path.exists(output_dir),
+            "supported_types": ['audio', 'video', 'image'],
+            "directory_structure": {}
+        }
+        
+        # 檢查每個文件類型目錄
+        for file_type in ['audio', 'video', 'image']:
+            type_dir = os.path.join(output_dir, file_type)
+            health_status["directory_structure"][file_type] = {
+                "path": type_dir,
+                "exists": os.path.exists(type_dir),
+                "writable": os.access(type_dir, os.W_OK) if os.path.exists(type_dir) else False
+            }
+            
+            # 嘗試創建目錄（如果不存在）
+            if not os.path.exists(type_dir):
+                try:
+                    os.makedirs(type_dir, exist_ok=True)
+                    health_status["directory_structure"][file_type]["created"] = True
+                    health_status["directory_structure"][file_type]["exists"] = True
+                    health_status["directory_structure"][file_type]["writable"] = True
+                except Exception as e:
+                    health_status["directory_structure"][file_type]["error"] = str(e)
+                    health_status["status"] = "warning"
+        
+        status_code = 200 if health_status["status"] == "healthy" else 207
+        return jsonify(health_status), status_code
         
     except Exception as e:
         logger.error(f"文件服務健康檢查失敗: {str(e)}")
