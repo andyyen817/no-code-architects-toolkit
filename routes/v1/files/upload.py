@@ -11,7 +11,7 @@ import os
 import uuid
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from auth.auth import authenticate
+from services.authentication import authenticate  # 🚨 修復：使用正確的導入路徑
 
 # 創建文件上傳藍圖
 v1_files_upload_bp = Blueprint('v1_files_upload', __name__)
