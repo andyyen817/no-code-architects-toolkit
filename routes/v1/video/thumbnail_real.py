@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from services.authentication import authenticate
-from services.local_storage import local_storage
+from services.output_file_manager import output_file_manager
 from config import LOCAL_STORAGE_PATH
 
 v1_video_thumbnail_real_bp = Blueprint('v1_video_thumbnail_real', __name__)
@@ -112,11 +112,19 @@ def generate_thumbnail_real():
             
             # 提取縮圖
             if extract_thumbnail_with_ffmpeg(input_video, output_path, timestamp):
-                # 保存到本地存儲
-                saved_path = local_storage.save_file(output_path, 'images')
-                file_url = local_storage.get_file_url(saved_path)
+                # 使用統一的輸出文件管理器保存到MySQL數據庫
+                file_info = output_file_manager.save_output_file(
+                    source_file_path=output_path,
+                    file_type='image',
+                    operation='thumbnail',
+                    original_filename=os.path.basename(video_url),
+                    metadata={
+                        'timestamp': timestamp,
+                        'source_url': video_url
+                    }
+                )
                 
-                logger.info(f"Thumbnail generated and saved: {saved_path}")
+                logger.info(f"Thumbnail generated and saved: {file_info['file_path']}")
                 
                 return jsonify({
                     "message": "Thumbnail generated successfully",
@@ -126,9 +134,9 @@ def generate_thumbnail_real():
                         "timestamp": timestamp
                     },
                     "output": {
-                        "file_path": saved_path,
-                        "file_url": file_url,
-                        "filename": os.path.basename(saved_path)
+                        "file_path": file_info['file_path'],
+                        "file_url": file_info['file_url'],
+                        "filename": file_info['filename']
                     }
                 }), 200
             else:

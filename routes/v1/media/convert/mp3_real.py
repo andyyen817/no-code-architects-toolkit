@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from services.authentication import authenticate
-from services.local_storage import local_storage
+from services.output_file_manager import output_file_manager
 from config import LOCAL_STORAGE_PATH
 
 v1_media_convert_mp3_real_bp = Blueprint('v1_media_convert_mp3_real', __name__)
@@ -114,11 +114,21 @@ def convert_to_mp3_real():
             
             # 執行 MP3 轉換
             if convert_to_mp3_with_ffmpeg(input_file, output_path):
-                # 保存到本地存儲
-                saved_path = local_storage.save_file(output_path, 'audio')
-                file_url = local_storage.get_file_url(saved_path)
+                # 使用統一的輸出文件管理器保存到MySQL數據庫
+                file_info = output_file_manager.save_output_file(
+                    source_file_path=output_path,
+                    file_type='audio',
+                    operation='convert_mp3',
+                    original_filename=os.path.basename(media_url),
+                    metadata={
+                        'source_url': media_url,
+                        'target_format': 'mp3',
+                        'bitrate': '192k',
+                        'sample_rate': '44100'
+                    }
+                )
                 
-                logger.info(f"Media converted to MP3 and saved: {saved_path}")
+                logger.info(f"Media converted to MP3 and saved: {file_info['file_path']}")
                 
                 return jsonify({
                     "message": "MP3 conversion completed successfully",
@@ -127,9 +137,9 @@ def convert_to_mp3_real():
                         "media_url": media_url
                     },
                     "output": {
-                        "file_path": saved_path,
-                        "file_url": file_url,
-                        "filename": os.path.basename(saved_path)
+                        "file_path": file_info['file_path'],
+                        "file_url": file_info['file_url'],
+                        "filename": file_info['filename']
                     }
                 }), 200
             else:

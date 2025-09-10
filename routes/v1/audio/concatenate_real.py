@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from services.authentication import authenticate
-from services.local_storage import local_storage
+from services.output_file_manager import output_file_manager
 from config import LOCAL_STORAGE_PATH
 
 v1_audio_concatenate_real_bp = Blueprint('v1_audio_concatenate_real', __name__)
@@ -137,11 +137,19 @@ def concatenate_audio_real():
             
             # 執行音頻合併
             if concatenate_audio_with_ffmpeg(input_files, output_path):
-                # 保存到本地存儲
-                saved_path = local_storage.save_file(output_path, 'audio')
-                file_url = local_storage.get_file_url(saved_path)
+                # 使用統一的輸出文件管理器保存到MySQL數據庫
+                file_info = output_file_manager.save_output_file(
+                    source_file_path=output_path,
+                    file_type='audio',
+                    operation='concatenate',
+                    original_filename=f"audio_merge_{len(audio_urls)}_files",
+                    metadata={
+                        'audio_urls': audio_urls,
+                        'total_files': len(audio_urls)
+                    }
+                )
                 
-                logger.info(f"Audio concatenated and saved: {saved_path}")
+                logger.info(f"Audio concatenated and saved: {file_info['file_path']}")
                 
                 return jsonify({
                     "message": "Audio concatenation completed successfully",
@@ -151,9 +159,9 @@ def concatenate_audio_real():
                         "total_files": len(audio_urls)
                     },
                     "output": {
-                        "file_path": saved_path,
-                        "file_url": file_url,
-                        "filename": os.path.basename(saved_path)
+                        "file_path": file_info['file_path'],
+                        "file_url": file_info['file_url'],
+                        "filename": file_info['filename']
                     }
                 }), 200
             else:

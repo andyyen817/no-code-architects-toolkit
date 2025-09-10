@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from services.authentication import authenticate
-from services.local_storage import local_storage
+from services.output_file_manager import output_file_manager
 from config import LOCAL_STORAGE_PATH
 
 v1_video_trim_real_bp = Blueprint('v1_video_trim_real', __name__)
@@ -110,11 +110,20 @@ def trim_video_real():
             
             # 執行修剪
             if trim_video_with_ffmpeg(input_video, output_path, start_time, end_time):
-                # 保存到本地存儲
-                saved_path = local_storage.save_file(output_path, 'videos')
-                file_url = local_storage.get_file_url(saved_path)
+                # 使用統一的輸出文件管理器保存到MySQL數據庫
+                file_info = output_file_manager.save_output_file(
+                    source_file_path=output_path,
+                    file_type='video',
+                    operation='trim',
+                    original_filename=os.path.basename(video_url),
+                    metadata={
+                        'start_time': start_time,
+                        'end_time': end_time,
+                        'source_url': video_url
+                    }
+                )
                 
-                logger.info(f"Video trimmed and saved: {saved_path}")
+                logger.info(f"Video trimmed and saved: {file_info['file_path']}")
                 
                 return jsonify({
                     "message": "Video trim completed successfully",
@@ -125,9 +134,9 @@ def trim_video_real():
                         "end_time": end_time
                     },
                     "output": {
-                        "file_path": saved_path,
-                        "file_url": file_url,
-                        "filename": os.path.basename(saved_path)
+                        "file_path": file_info['file_path'],
+                        "file_url": file_info['file_url'],
+                        "filename": file_info['filename']
                     }
                 }), 200
             else:
