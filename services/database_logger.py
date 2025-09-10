@@ -103,6 +103,32 @@ class DatabaseLogger:
                 connection.commit()
                 logger.info("✅ 數據庫表創建成功: nca_uploaded_files")
                 
+                # 🚨 新增：創建輸出文件記錄表
+                output_files_table_sql = """
+                CREATE TABLE IF NOT EXISTS `nca_output_files` (
+                    `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+                    `file_id` varchar(36) NOT NULL UNIQUE COMMENT 'UUID文件ID',
+                    `original_filename` varchar(255) NOT NULL COMMENT '原始文件名',
+                    `safe_filename` varchar(255) NOT NULL COMMENT '安全文件名',
+                    `file_type` enum('audio','video','image') NOT NULL COMMENT '文件類型',
+                    `file_size` bigint NOT NULL COMMENT '文件大小(字節)',
+                    `file_path` varchar(500) NOT NULL COMMENT '本地文件路徑',
+                    `file_url` varchar(500) NOT NULL COMMENT '外部訪問URL',
+                    `operation_type` varchar(50) NOT NULL COMMENT '操作類型(cut/trim/thumbnail/concatenate等)',
+                    `metadata` json COMMENT '額外元數據',
+                    `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `idx_file_id` (`file_id`),
+                    KEY `idx_file_type` (`file_type`),
+                    KEY `idx_operation_type` (`operation_type`),
+                    KEY `idx_created_at` (`created_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='輸出文件記錄表'
+                """
+                cursor.execute(output_files_table_sql)
+                connection.commit()
+                logger.info("✅ 數據庫表創建成功: nca_output_files")
+                
                 return True
                 
         except Exception as e:
@@ -385,6 +411,187 @@ class FileUploadLogger:
 # 將方法添加到主記錄器中
 database_logger.log_file_upload = FileUploadLogger().log_file_upload
 database_logger.get_uploaded_files = FileUploadLogger().get_uploaded_files
+
+# 🚨 新增：輸出文件相關功能
+class OutputFileLogger:
+    """輸出文件記錄器"""
+    
+    def log_output_file(self, file_record):
+        """
+        記錄輸出文件到數據庫
+        
+        Args:
+            file_record (dict): 文件記錄包含:
+                - file_id: UUID文件ID
+                - original_filename: 原始文件名
+                - safe_filename: 安全文件名
+                - file_type: 文件類型 (audio/video/image)
+                - file_size: 文件大小(字節)
+                - file_path: 本地文件路徑
+                - file_url: 外部訪問URL
+                - operation_type: 操作類型
+                - metadata: 額外元數據
+        """
+        if not PYMYSQL_AVAILABLE:
+            logger.info(f"📋 輸出文件記錄 (本地): {file_record['original_filename']}")
+            return True
+        
+        # 確保表存在
+        if not database_logger.create_table_if_not_exists():
+            return False
+        
+        try:
+            connection = database_logger.get_connection()
+            if not connection:
+                return False
+            
+            with connection.cursor() as cursor:
+                insert_sql = """
+                INSERT INTO `nca_output_files` (
+                    `file_id`, `original_filename`, `safe_filename`, `file_type`,
+                    `file_size`, `file_path`, `file_url`, `operation_type`, `metadata`
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                
+                # 處理metadata
+                metadata_json = None
+                if file_record.get('metadata'):
+                    metadata_json = json.dumps(file_record['metadata'], ensure_ascii=False)
+                
+                cursor.execute(insert_sql, (
+                    file_record['file_id'],
+                    file_record['original_filename'],
+                    file_record['safe_filename'],
+                    file_record['file_type'],
+                    file_record['file_size'],
+                    file_record['file_path'],
+                    file_record['file_url'],
+                    file_record.get('operation_type', 'unknown'),
+                    metadata_json
+                ))
+                connection.commit()
+                
+                record_id = cursor.lastrowid
+                logger.info(f"✅ 輸出文件已記錄到數據庫 (ID: {record_id}): {file_record['original_filename']}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"記錄輸出文件失敗: {e}")
+            return False
+        finally:
+            if 'connection' in locals():
+                connection.close()
+    
+    def get_output_files(self, file_type=None, operation_type=None, limit=50):
+        """
+        獲取輸出文件列表
+        
+        Args:
+            file_type (str): 文件類型過濾 (audio/video/image)
+            operation_type (str): 操作類型過濾
+            limit (int): 返回數量限制
+            
+        Returns:
+            list: 文件記錄列表
+        """
+        if not PYMYSQL_AVAILABLE:
+            return []
+        
+        try:
+            connection = database_logger.get_connection()
+            if not connection:
+                return []
+            
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                where_conditions = []
+                params = []
+                
+                if file_type:
+                    where_conditions.append("`file_type` = %s")
+                    params.append(file_type)
+                
+                if operation_type:
+                    where_conditions.append("`operation_type` = %s")
+                    params.append(operation_type)
+                
+                where_clause = " AND ".join(where_conditions)
+                if where_clause:
+                    where_clause = f"WHERE {where_clause}"
+                
+                select_sql = f"""
+                SELECT * FROM `nca_output_files` 
+                {where_clause}
+                ORDER BY `created_at` DESC 
+                LIMIT %s
+                """
+                params.append(limit)
+                
+                cursor.execute(select_sql, params)
+                results = cursor.fetchall()
+                
+                # 轉換時間為字符串
+                for result in results:
+                    if 'created_at' in result:
+                        result['created_at'] = result['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                    if 'updated_at' in result:
+                        result['updated_at'] = result['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+                    # 處理metadata
+                    if result.get('metadata'):
+                        try:
+                            result['metadata'] = json.loads(result['metadata'])
+                        except:
+                            result['metadata'] = {}
+                
+                return results
+                
+        except Exception as e:
+            logger.error(f"獲取輸出文件列表失敗: {e}")
+            return []
+        finally:
+            if 'connection' in locals():
+                connection.close()
+    
+    def get_output_file_by_id(self, file_id):
+        """根據ID獲取輸出文件信息"""
+        if not PYMYSQL_AVAILABLE:
+            return None
+        
+        try:
+            connection = database_logger.get_connection()
+            if not connection:
+                return None
+            
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                select_sql = "SELECT * FROM `nca_output_files` WHERE `file_id` = %s"
+                cursor.execute(select_sql, (file_id,))
+                result = cursor.fetchone()
+                
+                if result:
+                    # 轉換時間為字符串
+                    if 'created_at' in result:
+                        result['created_at'] = result['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                    if 'updated_at' in result:
+                        result['updated_at'] = result['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+                    # 處理metadata
+                    if result.get('metadata'):
+                        try:
+                            result['metadata'] = json.loads(result['metadata'])
+                        except:
+                            result['metadata'] = {}
+                
+                return result
+                
+        except Exception as e:
+            logger.error(f"獲取輸出文件信息失敗: {e}")
+            return None
+        finally:
+            if 'connection' in locals():
+                connection.close()
+
+# 將輸出文件方法添加到主記錄器中
+database_logger.log_output_file = OutputFileLogger().log_output_file
+database_logger.get_output_files = OutputFileLogger().get_output_files
+database_logger.get_output_file_by_id = OutputFileLogger().get_output_file_by_id
 
 
 

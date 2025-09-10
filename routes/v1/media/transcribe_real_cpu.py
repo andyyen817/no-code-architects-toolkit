@@ -6,7 +6,7 @@ import requests
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from services.authentication import authenticate
-from services.local_storage import local_storage
+from services.output_file_manager import output_file_manager
 
 v1_media_transcribe_real_cpu_bp = Blueprint('v1_media_transcribe_real_cpu', __name__)
 logger = logging.getLogger(__name__)
@@ -184,8 +184,20 @@ def transcribe_media_real_cpu():
                     with open(srt_path, 'w', encoding='utf-8') as f:
                         f.write(srt_content)
                     
-                    saved_srt_path = local_storage.save_file(srt_path, 'subtitles')
-                    response_data['srt_url'] = local_storage.get_file_url(saved_srt_path)
+                    # 使用統一的輸出文件管理器保存到MySQL數據庫
+                    srt_file_info = output_file_manager.save_output_file(
+                        source_file_path=srt_path,
+                        file_type='audio',  # SRT可以當作音頻相關文件
+                        operation='transcribe_srt',
+                        original_filename=os.path.basename(media_url),
+                        metadata={
+                            'source_url': media_url,
+                            'task': task,
+                            'language': language,
+                            'detected_language': transcription_result.get('language', 'unknown')
+                        }
+                    )
+                    response_data['srt_url'] = srt_file_info['file_url']
             
             if include_segments:
                 if word_timestamps:

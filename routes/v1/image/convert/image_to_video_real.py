@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from services.authentication import authenticate
-from services.local_storage import local_storage
+from services.output_file_manager import output_file_manager
 
 v1_image_convert_video_real_bp = Blueprint('v1_image_convert_video_real', __name__)
 logger = logging.getLogger(__name__)
@@ -241,9 +241,19 @@ def image_to_video_real():
                     "note": "Check FFmpeg installation and image file accessibility"
                 }), 500
             
-            # Save to local storage
-            saved_file_path = local_storage.save_file(output_path, 'videos')
-            file_url = local_storage.get_file_url(saved_file_path)
+            # 使用統一的輸出文件管理器保存到MySQL數據庫
+            file_info = output_file_manager.save_output_file(
+                source_file_path=output_path,
+                file_type='video',
+                operation='image_to_video',
+                original_filename=os.path.basename(image_url),
+                metadata={
+                    'source_url': image_url,
+                    'length': length,
+                    'frame_rate': frame_rate,
+                    'zoom_speed': zoom_speed * 100
+                }
+            )
             
             logger.info(f"Image to video conversion completed in {process_time:.2f}s")
             
@@ -257,9 +267,9 @@ def image_to_video_real():
                     "zoom_speed": zoom_speed * 100  # Convert back to percentage
                 },
                 "output": {
-                    "video_url": file_url,
-                    "file_path": saved_file_path,
-                    "filename": output_filename,
+                    "video_url": file_info['file_url'],
+                    "file_path": file_info['file_path'],
+                    "filename": file_info['filename'],
                     "duration": length,
                     "frame_rate": frame_rate,
                     "format": "mp4"
