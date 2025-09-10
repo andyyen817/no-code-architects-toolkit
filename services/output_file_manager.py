@@ -59,10 +59,11 @@ class OutputFileManager:
             else:
                 safe_filename = f"{operation}_{file_id}{file_extension}"
             
-            # 創建目標目錄
+            # 創建目標目錄（使用os.path.join確保路徑相容性）
             current_date = datetime.now()
-            year_month = current_date.strftime("%Y/%m")
-            target_dir = os.path.join(self.base_storage_path, file_type, year_month)
+            year = current_date.strftime("%Y")
+            month = current_date.strftime("%m") 
+            target_dir = os.path.join(self.base_storage_path, file_type, year, month)
             os.makedirs(target_dir, exist_ok=True)
             
             # 複製文件到目標位置
@@ -71,7 +72,8 @@ class OutputFileManager:
             
             # 獲取文件信息
             file_size = os.path.getsize(target_file_path)
-            file_url = f"{self.base_url}/{file_type}/{year_month}/{safe_filename}"
+            # URL中使用正斜線保持Web標準
+            file_url = f"{self.base_url}/{file_type}/{year}/{month}/{safe_filename}"
             
             # 準備數據庫記錄
             file_record = {
