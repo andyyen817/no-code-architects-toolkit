@@ -49,28 +49,57 @@ def serve_nca_file(file_type, file_path):
         logger.info(f"🔍 NCA存儲目錄: {nca_storage_dir}")
         logger.info(f"🔍 目標文件路徑: {file_path}")
         
-        # 使用safe_join防止路徑遍歷攻擊
-        full_file_path = safe_join(nca_storage_dir, file_path)
+        # 🚨 多層級文件路徑查找策略 - 兼容舊文件
+        potential_paths = []
         
-        if not full_file_path:
-            logger.warning(f"不安全的文件路徑: {file_path}")
-            abort(404)
+        # 1. 標準路徑：./output/nca/{file_type}/{path}
+        standard_path = safe_join(nca_storage_dir, file_path)
+        if standard_path:
+            potential_paths.append(("標準路徑", standard_path))
         
-        # 🚨 Debug: 記錄完整路徑和檢查結果
-        logger.info(f"🔍 完整文件路徑: {full_file_path}")
-        logger.info(f"🔍 文件是否存在: {os.path.exists(full_file_path)}")
+        # 2. 直接路徑：./output/nca/{file_type}/{filename}
+        if '/' in file_path:
+            filename_only = os.path.basename(file_path)
+            direct_path = safe_join(nca_storage_dir, filename_only)
+            if direct_path:
+                potential_paths.append(("直接路徑", direct_path))
         
-        # 如果文件不存在，列出目錄內容進行診斷
-        if not os.path.exists(full_file_path):
-            logger.warning(f"文件不存在: {full_file_path}")
+        # 3. 舊版路徑：./output/{file_type}/{path} (修復前的結構)
+        legacy_dir = os.path.join(output_dir, file_type)
+        legacy_path = safe_join(legacy_dir, file_path)
+        if legacy_path:
+            potential_paths.append(("舊版路徑", legacy_path))
+        
+        # 4. 根目錄路徑：./output/{path}
+        root_path = safe_join(output_dir, file_path)
+        if root_path:
+            potential_paths.append(("根目錄路徑", root_path))
+        
+        # 🔍 逐一檢查每個可能的路徑
+        found_file_path = None
+        found_strategy = None
+        
+        for strategy, path in potential_paths:
+            logger.info(f"🔍 檢查{strategy}: {path}")
+            if os.path.exists(path):
+                found_file_path = path
+                found_strategy = strategy
+                logger.info(f"✅ 找到文件 - {strategy}: {path}")
+                break
+            else:
+                logger.info(f"❌ 文件不存在 - {strategy}: {path}")
+        
+        if not found_file_path:
+            logger.warning(f"🚨 所有路徑都未找到文件: {file_path}")
             
-            # 🚨 Debug: 列出目錄內容
+            # 🚨 Debug: 列出目錄內容進行診斷
             try:
                 if os.path.exists(nca_storage_dir):
                     logger.info(f"🔍 NCA存儲目錄內容: {os.listdir(nca_storage_dir)}")
                     # 嘗試遞歸列出子目錄
                     for root, dirs, files in os.walk(nca_storage_dir):
-                        logger.info(f"🔍 {root}: dirs={dirs}, files={files}")
+                        if files:  # 只顯示有文件的目錄
+                            logger.info(f"🔍 {root}: files={files[:5]}{'...' if len(files) > 5 else ''}")
                 else:
                     logger.warning(f"🔍 NCA存儲目錄不存在: {nca_storage_dir}")
                     
@@ -91,6 +120,9 @@ def serve_nca_file(file_type, file_path):
                 logger.error(f"🔍 Debug列表錯誤: {debug_e}")
             
             abort(404)
+        
+        # 使用找到的文件路徑
+        full_file_path = found_file_path
         
         # 獲取MIME類型
         mime_type, _ = mimetypes.guess_type(full_file_path)
@@ -134,7 +166,8 @@ def files_health_check():
             "storage_path": output_dir,
             "storage_exists": os.path.exists(output_dir),
             "supported_types": ['audio', 'video', 'image'],
-            "directory_structure": {}
+            "directory_structure": {},
+            "migration_status": None
         }
         
         # 檢查每個文件類型目錄
@@ -157,7 +190,19 @@ def files_health_check():
                     health_status["directory_structure"][file_type]["error"] = str(e)
                     health_status["status"] = "warning"
         
-        status_code = 200 if health_status["status"] == "healthy" else 207
+        # 🚨 添加遷移狀態檢查
+        try:
+            from services.file_migration import file_migration_service
+            migration_health = file_migration_service.get_migration_health_check()
+            health_status["migration_status"] = migration_health
+            
+            if migration_health['legacy_files_found'] > 0:
+                health_status["status"] = "needs_migration"
+                health_status["message"] = f"NCA文件服務運行正常，但發現 {migration_health['legacy_files_found']} 個舊文件需要遷移"
+        except Exception as migration_e:
+            health_status["migration_status"] = {"error": str(migration_e)}
+        
+        status_code = 200 if health_status["status"] in ["healthy", "needs_migration"] else 207
         return jsonify(health_status), status_code
         
     except Exception as e:
@@ -165,4 +210,27 @@ def files_health_check():
         return jsonify({
             "status": "error",
             "message": f"文件服務錯誤: {str(e)}"
+        }), 500
+
+@nca_files_bp.route('/nca/files/migrate', methods=['POST'])
+def migrate_legacy_files():
+    """遷移舊文件到新的結構"""
+    try:
+        from services.file_migration import file_migration_service
+        
+        logger.info("🚀 開始文件遷移任務...")
+        migration_results = file_migration_service.migrate_legacy_files()
+        
+        return jsonify({
+            "status": "completed",
+            "message": "文件遷移任務完成",
+            "results": migration_results
+        }), 200
+        
+    except Exception as e:
+        error_msg = f"文件遷移失敗: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return jsonify({
+            "status": "error",
+            "message": error_msg
         }), 500
