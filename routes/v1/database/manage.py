@@ -7,7 +7,21 @@
 
 from flask import Blueprint, jsonify, request
 import logging
-from auth.auth import authenticate
+from functools import wraps
+import os
+from flask import request, jsonify
+
+# 創建認證裝飾器
+def authenticate(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.headers.get('X-API-Key')
+        expected_api_key = os.environ.get('API_KEY')
+        if api_key == expected_api_key:
+            return f(*args, **kwargs)
+        else:
+            return jsonify({"message": "Unauthorized", "status": "error"}), 401
+    return decorated_function
 
 # 創建數據庫管理藍圖
 v1_database_manage_bp = Blueprint('v1_database_manage', __name__)

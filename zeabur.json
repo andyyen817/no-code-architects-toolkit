@@ -7,7 +7,7 @@
       "port": 8080,
       "env": {
         "API_KEY": "vidspark-backend-2025",
-        "LOCAL_STORAGE_PATH": "./temp",
+        "LOCAL_STORAGE_PATH": "/app/output",
         "DEBUG": "true",
         "VIDSPARK_ENABLED": "true",
         "VIDSPARK_ENVIRONMENT": "production",
@@ -17,16 +17,35 @@
         "WHISPER_CACHE_DIR": "/app/whisper_cache",
         "FFMPEG_THREADS": "2",
         "MAX_VIDEO_SIZE": "100MB",
-        "WHISPER_MODEL": "tiny"
+        "WHISPER_MODEL": "tiny",
+        "VOICE_CLONE_DIR": "/app/voice_clone",
+        "DIGITAL_HUMAN_DIR": "/app/digital_human"
       },
       "volumes": [
         {
+          "name": "main-storage",
+          "mountPath": "/app/output",
+          "size": "20GB"
+        },
+        {
           "name": "whisper-cache",
-          "mountPath": "/app/whisper_cache"
+          "mountPath": "/app/whisper_cache",
+          "size": "5GB"
+        },
+        {
+          "name": "voice-clone-storage",
+          "mountPath": "/app/voice_clone",
+          "size": "10GB"
+        },
+        {
+          "name": "digital-human-storage",
+          "mountPath": "/app/digital_human",
+          "size": "15GB"
         },
         {
           "name": "temp-storage",
-          "mountPath": "/app/temp"
+          "mountPath": "/app/temp",
+          "size": "5GB"
         }
       ]
     }
