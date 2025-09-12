@@ -104,6 +104,7 @@ def discover_and_register_blueprints(app, base_dir='routes'):
     logger.info(f"Found {len(python_files)} Python files in {base_dir}")
     
     for file_path in python_files:
+        module_path = None
         try:
             # Convert file path to import path
             rel_path = os.path.relpath(file_path, cwd)
@@ -112,25 +113,40 @@ def discover_and_register_blueprints(app, base_dir='routes'):
             # Convert path separators to dots for import
             module_path = module_path.replace(os.path.sep, '.')
             
-            # Skip __init__.py files
-            if module_path.endswith('__init__'):
-                continue
+            # Process __init__.py files to check for blueprints
+            # Don't skip __init__.py files as they might contain blueprint imports
                 
-            #logger.info(f"Attempting to import module: {module_path}")
+            logger.info(f"Attempting to import module: {module_path}")
             
-            # Import the module
-            module = importlib.import_module(module_path)
+            # Import the module with additional error handling
+            try:
+                module = importlib.import_module(module_path)
+            except ImportError as ie:
+                logger.warning(f"ImportError for module {module_path}: {str(ie)}")
+                continue
+            except ModuleNotFoundError as mnfe:
+                logger.warning(f"ModuleNotFoundError for module {module_path}: {str(mnfe)}")
+                continue
+            except Exception as ie:
+                logger.warning(f"Import exception for module {module_path}: {str(ie)}")
+                continue
             
             # Find all Blueprint instances in the module
-            for name, obj in inspect.getmembers(module):
-                if isinstance(obj, Blueprint) and obj not in registered_blueprints:
-                    pid = os.getpid()
-                    logger.info(f"PID {pid} Registering: {module_path}")
-                    app.register_blueprint(obj)
-                    registered_blueprints.add(obj)
+            try:
+                for name, obj in inspect.getmembers(module):
+                    if isinstance(obj, Blueprint) and obj not in registered_blueprints:
+                        pid = os.getpid()
+                        logger.info(f"PID {pid} Registering blueprint '{obj.name}' from {module_path}")
+                        app.register_blueprint(obj)
+                        registered_blueprints.add(obj)
+            except Exception as be:
+                logger.warning(f"Error processing blueprints in module {module_path}: {str(be)}")
+                continue
             
         except Exception as e:
-            logger.error(f"Error importing module {module_path}: {str(e)}")
+            error_module = module_path if module_path else file_path
+            logger.error(f"Critical error processing {error_module}: {str(e)}")
+            # Continue processing other modules even if one fails critically
     
     logger.info(f"PID {pid} Registered {len(registered_blueprints)} blueprints")
     return registered_blueprints

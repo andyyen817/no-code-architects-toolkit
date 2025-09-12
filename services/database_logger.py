@@ -7,6 +7,7 @@
 
 import logging
 import json
+import os
 from datetime import datetime
 
 # 條件導入
@@ -20,13 +21,14 @@ logger = logging.getLogger(__name__)
 
 class DatabaseLogger:
     def __init__(self):
+        # 使用环境变量配置数据库连接
         self.db_config = {
-            'host': 'tpe1.clusters.zeabur.com',
-            'port': 30791,
-            'user': 'root',
-            'password': '248s1xp5zOiwdLe0MqGQ3W7nTE9YZVh6',
-            'database': 'zeabur',
-            'charset': 'utf8mb4'
+            'host': os.getenv('DB_HOST', 'mysql.zeabur.internal'),
+            'port': int(os.getenv('DB_PORT', '3306')),
+            'user': os.getenv('DB_USERNAME', 'root'),
+            'password': os.getenv('DB_PASSWORD', ''),
+            'database': os.getenv('DB_DATABASE', 'zeabur'),
+            'charset': os.getenv('DB_CHARSET', 'utf8mb4')
         }
         self.table_created = False
     

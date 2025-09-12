@@ -12,6 +12,7 @@ import uuid
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from services.authentication import authenticate  # 🚨 修復：使用正確的導入路徑
+from services.database_logger import database_logger  # 🚨 新增：導入數據庫記錄器
 
 # 創建文件上傳藍圖
 v1_files_upload_bp = Blueprint('v1_files_upload', __name__)
@@ -126,6 +127,69 @@ def handle_file_upload(file_type):
         
     except Exception as e:
         error_msg = f"{file_type.capitalize()}文件上傳失敗: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return jsonify({
+            "message": error_msg,
+            "status": "error"
+        }), 500
+
+@v1_files_upload_bp.route('/v1/files/output/list', methods=['GET'])
+@authenticate
+def get_output_files():
+    """
+    獲取輸出文件列表
+    支持查詢參數：
+    - limit: 返回數量限制 (默認50)
+    - file_type: 文件類型過濾 (audio/video/image)
+    - operation_type: 操作類型過濾 (cut/trim/thumbnail等)
+    """
+    try:
+        # 獲取查詢參數
+        limit = request.args.get('limit', 50, type=int)
+        file_type = request.args.get('file_type')
+        operation_type = request.args.get('operation_type')
+        
+        # 限制最大返回數量
+        limit = min(limit, 100)
+        
+        # 從數據庫獲取輸出文件列表
+        files = database_logger.get_output_files(
+            file_type=file_type,
+            operation_type=operation_type,
+            limit=limit
+        )
+        
+        # 格式化文件信息
+        formatted_files = []
+        for file_record in files:
+            file_info = {
+                'file_id': file_record.get('file_id'),
+                'filename': file_record.get('safe_filename'),
+                'original_filename': file_record.get('original_filename'),
+                'file_type': file_record.get('file_type'),
+                'file_size': file_record.get('file_size'),
+                'file_size_mb': round(file_record.get('file_size', 0) / (1024 * 1024), 2) if file_record.get('file_size') else 0,
+                'file_url': file_record.get('file_url'),
+                'operation_type': file_record.get('operation_type'),
+                'metadata': file_record.get('metadata', {}),
+                'created_at': file_record.get('created_at')
+            }
+            formatted_files.append(file_info)
+        
+        return jsonify({
+            "message": "輸出文件列表獲取成功",
+            "status": "success",
+            "files": formatted_files,
+            "total": len(formatted_files),
+            "filters": {
+                "file_type": file_type,
+                "operation_type": operation_type,
+                "limit": limit
+            }
+        }), 200
+        
+    except Exception as e:
+        error_msg = f"獲取輸出文件列表失敗: {str(e)}"
         logger.error(error_msg, exc_info=True)
         return jsonify({
             "message": error_msg,
