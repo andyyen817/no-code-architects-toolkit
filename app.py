@@ -253,5 +253,8 @@ def main():
         except Exception as e:
             logger.error(f"清理資源時出錯: {e}")
 
+# WSGI應用對象 - 用於gunicorn部署
+app = create_app()
+
 if __name__ == '__main__':
     main()
