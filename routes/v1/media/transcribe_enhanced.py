@@ -46,9 +46,9 @@ def download_media(url: str, temp_dir: str) -> str:
 def transcribe_with_faster_whisper(audio_path: str, task: str = "transcribe", language: str = None) -> dict:
     """Transcribe audio using faster-whisper (CPU optimized)"""
     try:
-        # Use tiny model (best for CPU and memory)
-        logger.info("Loading faster-whisper tiny model...")
-        model = WhisperModel("tiny", device="cpu", compute_type="int8", num_workers=1)
+        # Use small model (balance between accuracy and performance)
+        logger.info("Loading faster-whisper small model...")
+        model = WhisperModel("small", device="cpu", compute_type="int8", num_workers=1)
         logger.info("Model loaded successfully")
         
         # Check audio file size and duration
