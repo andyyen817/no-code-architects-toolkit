@@ -1,4 +1,4 @@
-# 🚀 GitHub部署指令 - 修復Gunicorn啟動失敗
+﻿# 🚀 GitHub部署指令 - 修復Gunicorn啟動失敗
 
 ## 📋 **修復總結**
 ✅ **問題**：Gunicorn工作進程啟動失敗  

@@ -1,4 +1,4 @@
-# Media Feedback Portal
+﻿# Media Feedback Portal
 
 This endpoint serves a static web page for collecting media feedback.
 

@@ -1,4 +1,4 @@
-# Image to Video Conversion
+﻿# Image to Video Conversion
 
 ## 1. Overview
 

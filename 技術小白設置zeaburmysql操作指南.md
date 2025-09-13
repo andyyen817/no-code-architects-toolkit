@@ -1,4 +1,4 @@
-# 技術小白設置Zeabur MySQL操作指南
+﻿# 技術小白設置Zeabur MySQL操作指南
 
 ## 📋 操作概述
 本指南將幫助您在Zeabur平台上正確設置MySQL數據庫環境變量，確保VidSpark後端應用能夠正常連接和使用數據庫。
@@ -108,7 +108,7 @@
 #### 應用配置
 ```
 變量名: API_KEY
-變數值: production-api-key-2024
+變數值: vidspark-production-api-key-2024-secure
 說明: 應用API密鑰
 ```
 

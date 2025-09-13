@@ -9,7 +9,7 @@ print("=== 分析藍圖發現過程 ===")
 
 # 運行Flask應用並捕獲日誌
 env = os.environ.copy()
-env['API_KEY'] = 'production-api-key-2024'
+env['API_KEY'] = 'vidspark-production-api-key-2024-secure'
 
 proc = subprocess.Popen(
     ['python', 'app.py'], 

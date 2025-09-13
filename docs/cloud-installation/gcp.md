@@ -1,4 +1,4 @@
-# Installing on the Google Cloud Platform (GCP)
+﻿# Installing on the Google Cloud Platform (GCP)
 
 ## 🎥 Video Instructions
 

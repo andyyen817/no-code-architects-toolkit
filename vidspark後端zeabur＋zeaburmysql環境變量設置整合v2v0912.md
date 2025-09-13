@@ -1,4 +1,4 @@
-# VidSpark後端Zeabur+ZeaburMySQL環境變量設置整合 v2.0912
+﻿# VidSpark後端Zeabur+ZeaburMySQL環境變量設置整合 v2.0912
 
 ## 📋 文檔概述
 本文檔整合了VidSpark後端在Zeabur平台部署時所需的所有環境變量配置，包括數據庫連接、應用配置、存儲設置等。

@@ -1,4 +1,4 @@
-# Authenticate Endpoint
+﻿# Authenticate Endpoint
 
 ## 1. Overview
 

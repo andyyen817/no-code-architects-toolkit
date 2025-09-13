@@ -1,4 +1,4 @@
-# ASS Subtitle Generation Endpoint (v1)
+﻿# ASS Subtitle Generation Endpoint (v1)
 
 ## 1. Overview
 

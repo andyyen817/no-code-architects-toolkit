@@ -1,4 +1,4 @@
-# S3 Upload API
+﻿# S3 Upload API
 
 This endpoint allows you to stream a file from a remote URL directly to an S3-compatible storage service without using local disk space.
 

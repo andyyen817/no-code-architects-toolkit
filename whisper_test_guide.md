@@ -1,4 +1,4 @@
-# Whisper 音頻轉錄和視頻字幕測試指南
+﻿# Whisper 音頻轉錄和視頻字幕測試指南
 
 ## 🎯 測試目標
 驗證ZEABUR上faster-whisper引擎的轉錄能力和字幕生成功能

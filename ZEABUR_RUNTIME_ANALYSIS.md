@@ -1,4 +1,4 @@
-# ZEABUR 運行日誌分析報告
+﻿# ZEABUR 運行日誌分析報告
 
 ## 🎉 部署成功概況
 - ✅ **應用啟動成功** - Gunicorn workers 正常運行

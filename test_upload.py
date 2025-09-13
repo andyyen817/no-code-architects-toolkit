@@ -12,7 +12,7 @@ def test_file_upload():
     
     # API配置
     base_url = "http://localhost:5000"
-    api_key = "production-api-key-2024"
+    api_key = "vidspark-production-api-key-2024-secure"
     
     # 创建测试文件
     test_file_path = "test_audio.txt"
@@ -63,7 +63,7 @@ def test_file_list():
     """测试获取文件列表"""
     
     base_url = "http://localhost:5000"
-    api_key = "production-api-key-2024"
+    api_key = "vidspark-production-api-key-2024-secure"
     
     url = f"{base_url}/v1/files/list"
     headers = {

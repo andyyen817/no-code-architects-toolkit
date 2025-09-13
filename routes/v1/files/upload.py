@@ -80,20 +80,115 @@ def handle_file_upload(file_type):
         
         # 創建存儲目錄（按日期分類）
         current_date = datetime.now()
-        year_month = current_date.strftime("%Y/%m")
-        storage_dir = os.path.join(os.getcwd(), 'output', 'nca', file_type, year_month)
+        year = current_date.strftime("%Y")
+        month = current_date.strftime("%m")
+        storage_dir = os.path.join(os.getcwd(), 'output', 'nca', file_type, year, month)
         os.makedirs(storage_dir, exist_ok=True)
         
         # 保存文件
         file_path = os.path.join(storage_dir, safe_filename)
         file.save(file_path)
         
+        # 如果是音頻文件，使用FFmpeg進行音量正規化處理
+        if file_type == 'audio':
+            try:
+                import subprocess
+                # 檢查 FFmpeg 是否可用
+                ffmpeg_paths = [
+                    "ffmpeg",  # 系統 PATH
+                    r"D:\no-code-architects-toolkit\ffmpeg-binary\bin\ffmpeg.exe",  # 正確的 FFmpeg 位置
+                    os.path.join(os.path.dirname(os.getcwd()), "ffmpeg-binary", "bin", "ffmpeg.exe")
+                ]
+                
+                ffmpeg_cmd = None
+                for path in ffmpeg_paths:
+                    try:
+                        result = subprocess.run([path, "-version"], capture_output=True, text=True, timeout=5)
+                        if result.returncode == 0:
+                            ffmpeg_cmd = path
+                            break
+                    except (FileNotFoundError, subprocess.TimeoutExpired):
+                        continue
+                
+                if ffmpeg_cmd:
+                    # 創建臨時文件用於處理
+                    temp_path = file_path + ".temp"
+                    
+                    # 🚨 改進：使用更有效的音量處理策略
+                    # 1. 先分析音頻音量
+                    analyze_command = [
+                        ffmpeg_cmd,
+                        "-i", file_path,
+                        "-af", "volumedetect",
+                        "-f", "null",
+                        "-"
+                    ]
+                    
+                    analyze_result = subprocess.run(analyze_command, capture_output=True, text=True)
+                    
+                    # 2. 根據原始格式選擇合適的編碼器和參數
+                    if file_extension.lower() == '.m4a':
+                        codec_params = ["-codec:a", "aac", "-b:a", "256k"]
+                        output_ext = file_extension
+                    elif file_extension.lower() == '.mp3':
+                        codec_params = ["-codec:a", "libmp3lame", "-b:a", "192k"]
+                        output_ext = file_extension
+                    else:
+                        # 對於其他格式，轉換為高質量MP3
+                        codec_params = ["-codec:a", "libmp3lame", "-b:a", "192k"]
+                        output_ext = '.mp3'
+                        # 更新文件路徑和文件名
+                        new_safe_filename = f"{file_id}{output_ext}"
+                        new_file_path = os.path.join(storage_dir, new_safe_filename)
+                        temp_path = new_file_path + ".temp"
+                    
+                    # 3. 使用音量正規化濾鏡，保持較高音量
+                    # 修復：調整I參數從-16到-14，提高整體音量
+                    audio_filter = "loudnorm=I=-14:TP=-1.5:LRA=11:print_format=summary"
+                    
+                    # FFmpeg 命令：音量正規化 + 增益處理
+                    command = [
+                        ffmpeg_cmd,
+                        "-i", file_path,
+                        "-af", audio_filter,
+                    ] + codec_params + [
+                        "-ar", "44100",
+                        temp_path,
+                        "-y"
+                    ]
+                    
+                    result = subprocess.run(command, capture_output=True, text=True)
+                    
+                    if result.returncode == 0:
+                        # 如果格式改變了，更新相關變量
+                        if output_ext != file_extension:
+                            # 刪除原文件
+                            os.remove(file_path)
+                            # 更新文件路徑和名稱
+                            file_path = new_file_path
+                            safe_filename = new_safe_filename
+                            file_extension = output_ext
+                        
+                        # 替換原文件
+                        os.replace(temp_path, file_path)
+                        logger.info(f"Audio volume enhanced and normalized: {safe_filename}")
+                    else:
+                        # 如果處理失敗，刪除臨時文件並保留原文件
+                        if os.path.exists(temp_path):
+                            os.remove(temp_path)
+                        logger.warning(f"Audio normalization failed for {safe_filename}: {result.stderr}")
+                else:
+                    logger.warning("FFmpeg not found, skipping audio normalization")
+            except Exception as e:
+                logger.warning(f"Audio normalization error for {safe_filename}: {e}")
+        
         # 獲取文件信息
         file_size = os.path.getsize(file_path)
         file_size_mb = get_file_size_mb(file_size)
         
-        # 生成文件URL（外部可訪問）
-        file_url = f"https://vidsparkback.zeabur.app/nca/files/{file_type}/{year_month}/{safe_filename}"
+        # 生成文件URL（外部可訪問）- 使用最終的safe_filename
+        final_filename = os.path.basename(file_path)
+        file_url = f"https://vidsparkback.zeabur.app/nca/files/{file_type}/{year}/{month}/{final_filename}"
         
         # 保存到數據庫
         file_record = {

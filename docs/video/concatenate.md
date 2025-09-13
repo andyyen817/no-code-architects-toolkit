@@ -1,4 +1,4 @@
-# Video Concatenation Endpoint
+﻿# Video Concatenation Endpoint
 
 ## 1. Overview
 

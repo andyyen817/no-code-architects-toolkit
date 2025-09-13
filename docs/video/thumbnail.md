@@ -1,4 +1,4 @@
-# Video Thumbnail Generation API
+﻿# Video Thumbnail Generation API
 
 ## Overview
 

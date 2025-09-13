@@ -1,4 +1,4 @@
-# Contributing to No-Code Architects Toolkit
+﻿# Contributing to No-Code Architects Toolkit
 
 Thanks for your interest in contributing! ❤️
 

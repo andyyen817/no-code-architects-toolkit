@@ -1,4 +1,4 @@
-# Media Transcription API Documentation
+﻿# Media Transcription API Documentation
 
 ## Overview
 The Media Transcription endpoint is part of the v1 API suite, providing audio/video transcription and translation capabilities. This endpoint leverages a queuing system for handling long-running transcription tasks, with webhook support for asynchronous processing. It's integrated into the main Flask application as a Blueprint and supports both direct response and cloud storage options for the transcription results.

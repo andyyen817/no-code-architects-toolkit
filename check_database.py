@@ -11,7 +11,7 @@ def check_uploaded_files():
     try:
         response = requests.get(
             'http://localhost:5000/v1/files/list?limit=50',
-            headers={'X-API-Key': 'final-working-2024'}
+            headers={'X-API-Key': 'vidspark-production-api-key-2024-secure'}
         )
         
         print(f"API響應狀態: {response.status_code}")
@@ -44,7 +44,7 @@ def check_output_files():
     try:
         response = requests.get(
             'http://localhost:5000/v1/files/output/list?limit=50',
-            headers={'X-API-Key': 'final-working-2024'}
+            headers={'X-API-Key': 'vidspark-production-api-key-2024-secure'}
         )
         
         print(f"API響應狀態: {response.status_code}")

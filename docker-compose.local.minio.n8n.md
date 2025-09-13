@@ -1,4 +1,4 @@
-# Local Development with MinIO and n8n
+﻿# Local Development with MinIO and n8n
 
 This setup provides a complete local development environment for the No Code Architect Toolkit with integrated MinIO S3-compatible storage and n8n workflow automation.
 

@@ -1,4 +1,4 @@
-# Media Convert Endpoint Documentation
+﻿# Media Convert Endpoint Documentation
 
 ## 1. Overview
 
