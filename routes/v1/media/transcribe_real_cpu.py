@@ -45,8 +45,8 @@ def download_media(url: str, temp_dir: str) -> str:
 def transcribe_with_faster_whisper(audio_path: str, task: str = "transcribe", language: str = None) -> dict:
     """使用 faster-whisper 進行轉錄 (CPU優化)"""
     try:
-        # 使用 tiny 模型 (最適合CPU和內存)
-        model = WhisperModel("tiny", device="cpu", compute_type="int8")
+        # 使用 small 模型 (平衡準確性和性能)
+        model = WhisperModel("small", device="cpu", compute_type="int8")
         
         # 進行轉錄
         segments, info = model.transcribe(
