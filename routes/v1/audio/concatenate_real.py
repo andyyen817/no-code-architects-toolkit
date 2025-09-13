@@ -71,10 +71,11 @@ def concatenate_audio_with_ffmpeg(input_files: list, output_path: str) -> bool:
             input_args.extend(["-i", input_file])
             filter_inputs.append(f"[{i}:0]")
         
-        # 建構 filter_complex 字符串
-        filter_complex = "".join(filter_inputs) + f"concat=n={len(input_files)}:v=0:a=1[out]"
+        # 建構 filter_complex 字符串，添加音量正規化
+        # 修復：調整I參數從-16到-14，與上傳功能保持一致，提高整體音量
+        filter_complex = "".join(filter_inputs) + f"concat=n={len(input_files)}:v=0:a=1[concat];[concat]loudnorm=I=-14:TP=-1.5:LRA=11[out]"
         
-        # FFmpeg 音頻合併命令（使用 filter_complex 支援混合格式）
+        # FFmpeg 音頻合併命令（使用 filter_complex 支援混合格式並進行音量正規化）
         command = [
             ffmpeg_cmd
         ] + input_args + [

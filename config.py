@@ -31,7 +31,7 @@ class AppConfig:
             'debug': os.getenv('DEBUG', 'false').lower() == 'true',
             'host': os.getenv('HOST', '0.0.0.0'),
             'port': int(os.getenv('PORT', '8080')),
-            'api_key': os.getenv('API_KEY', 'production-api-key-2024'),
+            'api_key': os.getenv('API_KEY', 'vidspark-production-api-key-2024-secure'),
             'secret_key': os.getenv('SECRET_KEY', 'your-secret-key-here')
         }
         

@@ -1,4 +1,4 @@
-# Adding New Routes
+﻿# Adding New Routes
 
 This document explains how to add new routes to the application using the dynamic route registration system.
 

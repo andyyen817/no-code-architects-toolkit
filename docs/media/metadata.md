@@ -1,4 +1,4 @@
-# Media Metadata
+﻿# Media Metadata
 
 This endpoint extracts detailed metadata from media files (video, audio, image) including format, duration, codec information, resolution, and bitrates.
 

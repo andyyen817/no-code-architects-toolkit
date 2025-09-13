@@ -1,4 +1,4 @@
-# GenHuman API 完整調用文檔
+﻿# GenHuman API 完整調用文檔
 
 ## 🎯 **文檔目的**
 為後端開發者提供完整的GenHuman API調用指南，包含測試頁面和成功的API調用流程。

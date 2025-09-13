@@ -1,4 +1,4 @@
-# ZEABUR 部署後測試指南
+﻿# ZEABUR 部署後測試指南
 
 ## 🎯 測試目標
 驗證No-Code Architects Toolkit在ZEABUR上的完整功能
@@ -28,7 +28,7 @@
 ```bash
 測試URL: https://vidsparkback.zeabur.app/v1/toolkit/authenticate
 方法: POST
-數據: {"api_key": "production-api-key-2024"}
+數據: {"api_key": "vidspark-production-api-key-2024-secure"}
 ```
 
 **測試方法**:

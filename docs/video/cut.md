@@ -1,4 +1,4 @@
-# Video Cut Endpoint
+﻿# Video Cut Endpoint
 
 ## 1. Overview
 

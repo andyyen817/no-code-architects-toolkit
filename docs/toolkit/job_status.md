@@ -1,4 +1,4 @@
-# Job Status Endpoint Documentation
+﻿# Job Status Endpoint Documentation
 
 ## 1. Overview
 

@@ -1,4 +1,4 @@
-# Video Trim Endpoint
+﻿# Video Trim Endpoint
 
 ## 1. Overview
 

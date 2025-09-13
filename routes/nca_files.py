@@ -49,29 +49,33 @@ def serve_nca_file(file_type, file_path):
         logger.info(f"🔍 NCA存儲目錄: {nca_storage_dir}")
         logger.info(f"🔍 目標文件路徑: {file_path}")
         
+        # 🚨 標準化路徑分隔符 - Windows兼容性修復
+        # 保持使用正斜杠，讓safe_join自動處理路徑分隔符
+        normalized_file_path = file_path
+        
         # 🚨 多層級文件路徑查找策略 - 兼容舊文件
         potential_paths = []
         
         # 1. 標準路徑：./output/nca/{file_type}/{path}
-        standard_path = safe_join(nca_storage_dir, file_path)
+        standard_path = safe_join(nca_storage_dir, normalized_file_path)
         if standard_path:
             potential_paths.append(("標準路徑", standard_path))
         
         # 2. 直接路徑：./output/nca/{file_type}/{filename}
-        if '/' in file_path:
-            filename_only = os.path.basename(file_path)
+        if os.sep in normalized_file_path:
+            filename_only = os.path.basename(normalized_file_path)
             direct_path = safe_join(nca_storage_dir, filename_only)
             if direct_path:
                 potential_paths.append(("直接路徑", direct_path))
         
         # 3. 舊版路徑：./output/{file_type}/{path} (修復前的結構)
         legacy_dir = os.path.join(output_dir, file_type)
-        legacy_path = safe_join(legacy_dir, file_path)
+        legacy_path = safe_join(legacy_dir, normalized_file_path)
         if legacy_path:
             potential_paths.append(("舊版路徑", legacy_path))
         
         # 4. 根目錄路徑：./output/{path}
-        root_path = safe_join(output_dir, file_path)
+        root_path = safe_join(output_dir, normalized_file_path)
         if root_path:
             potential_paths.append(("根目錄路徑", root_path))
         
@@ -126,11 +130,28 @@ def serve_nca_file(file_type, file_path):
         
         # 獲取MIME類型
         mime_type, _ = mimetypes.guess_type(full_file_path)
+        
+        # 🚨 修復：針對音頻文件優化MIME類型設置
+        file_ext = os.path.splitext(full_file_path)[1].lower()
+        if file_type == 'audio':
+            if file_ext == '.m4a':
+                mime_type = 'audio/mp4'  # 正確的m4a MIME類型
+            elif file_ext == '.mp3':
+                mime_type = 'audio/mpeg'
+            elif file_ext == '.wav':
+                mime_type = 'audio/wav'
+            elif file_ext == '.aac':
+                mime_type = 'audio/aac'
+            elif file_ext == '.ogg':
+                mime_type = 'audio/ogg'
+            elif file_ext == '.flac':
+                mime_type = 'audio/flac'
+        
         if not mime_type:
             mime_type = 'application/octet-stream'
         
         # 記錄文件訪問
-        logger.info(f"✅ 提供文件訪問: {file_type}/{file_path}")
+        logger.info(f"✅ 提供文件訪問: {file_type}/{file_path} (MIME: {mime_type})")
         
         # 返回文件（添加跨域和緩存頭）
         response = send_file(
@@ -145,13 +166,24 @@ def serve_nca_file(file_type, file_path):
         response.headers['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
         response.headers['Cache-Control'] = 'public, max-age=86400'  # 24小時緩存
         
+        # 🚨 修復：強制設置正確的Content-Type，確保音頻文件在瀏覽器中播放而不是下載
+        if file_type == 'audio':
+            response.headers['Content-Type'] = mime_type  # 強制設置正確的MIME類型
+            response.headers['Content-Disposition'] = 'inline'
+            response.headers['Accept-Ranges'] = 'bytes'  # 支持音頻播放器的範圍請求
+        
         return response
         
     except Exception as e:
         logger.error(f"提供文件時發生錯誤 {file_type}/{file_path}: {str(e)}")
         import traceback
         logger.error(f"詳細錯誤堆疊: {traceback.format_exc()}")
-        abort(500)
+        
+        # 🚨 修復：正確處理404錯誤，不要轉換為500
+        if "404 Not Found" in str(e) or "NotFound" in str(type(e).__name__):
+            abort(404)
+        else:
+            abort(500)
 
 @nca_files_bp.route('/nca/files/health')
 def files_health_check():

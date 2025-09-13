@@ -1,4 +1,4 @@
-# FFmpeg Compose API Endpoint
+﻿# FFmpeg Compose API Endpoint
 
 ## 1. Overview
 

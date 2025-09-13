@@ -1,4 +1,4 @@
-# 🗄️ No-Code Architects Toolkit 數據庫設置指南
+﻿# 🗄️ No-Code Architects Toolkit 數據庫設置指南
 
 ## 🎯 目標
 在你的ZEABUR MySQL實例中創建後端所需的所有數據表

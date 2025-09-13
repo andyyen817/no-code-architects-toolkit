@@ -1,4 +1,4 @@
-# Playwright Screenshot Endpoint
+﻿# Playwright Screenshot Endpoint
 
 **Implemented by:** [Harrison Fisher](https://github.com/HarrisonFisher)
 

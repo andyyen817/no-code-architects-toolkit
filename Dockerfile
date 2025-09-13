@@ -37,7 +37,7 @@ RUN chmod -R 755 /app/output && \
     chmod -R 755 /app/temp
 
 # Environment variables for production
-ENV API_KEY=production-api-key-2024
+ENV API_KEY=vidspark-production-api-key-2024-secure
 ENV LOCAL_STORAGE_PATH=/app/output
 ENV DEBUG=false
 ENV FLASK_ENV=production

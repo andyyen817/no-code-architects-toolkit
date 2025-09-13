@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFmpeg功能测试中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .response-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .metadata-tree {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">🎬 FFmpeg功能测试中心</h1>
+            <p class="text-gray-600">测试FFmpeg的各项音视频处理功能</p>
+            
+            <!-- 健康检查 -->
+            <div class="mt-4">
+                <button onclick="checkHealth()" 
+                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    🔍 检查FFmpeg状态
+                </button>
+                <div id="healthResult" class="mt-2"></div>
+            </div>
+        </div>
+
+        <!-- 功能测试区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- 格式转换测试 -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">🔄 格式转换测试</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">选择文件:</label>
+                        <input type="file" id="convertFile" accept=".mp4,.avi,.mov,.mp3,.wav,.m4a,.flac" 
+                               class="w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">目标格式:</label>
+                        <select id="targetFormat" class="w-full p-2 border border-gray-300 rounded-md">
+                            <option value="mp4">MP4 (视频)</option>
+                            <option value="avi">AVI (视频)</option>
+                            <option value="mov">MOV (视频)</option>
+                            <option value="mp3">MP3 (音频)</option>
+                            <option value="wav">WAV (音频)</option>
+                            <option value="m4a">M4A (音频)</option>
+                            <option value="flac">FLAC (音频)</option>
+                        </select>
+                    </div>
+                    <button onclick="testFormatConvert()" 
+                            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        🔄 开始转换
+                    </button>
+                    <div id="convertResult" class="response-container"></div>
+                </div>
+            </div>
+
+            <!-- 元数据获取测试 -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">📊 元数据获取测试</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">选择媒体文件:</label>
+                        <input type="file" id="metadataFile" accept=".mp4,.avi,.mov,.mp3,.wav,.m4a,.flac,.mkv" 
+                               class="w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+                    <button onclick="testGetMetadata()" 
+                            class="w-full bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                        📊 获取元数据
+                    </button>
+                    <div id="metadataResult" class="response-container"></div>
+                </div>
+            </div>
+
+            <!-- 媒体剪切测试 -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">✂️ 媒体剪切测试</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">选择媒体文件:</label>
+                        <input type="file" id="trimFile" accept=".mp4,.avi,.mov,.mp3,.wav,.m4a,.flac" 
+                               class="w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">开始时间 (秒):</label>
+                            <input type="number" id="startTime" value="0" min="0" step="0.1"
+                                   class="w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">持续时间 (秒):</label>
+                            <input type="number" id="duration" value="10" min="0.1" step="0.1"
+                                   class="w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                    </div>
+                    <button onclick="testTrimMedia()" 
+                            class="w-full bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+                        ✂️ 开始剪切
+                    </button>
+                    <div id="trimResult" class="response-container"></div>
+                </div>
+            </div>
+
+            <!-- 文件管理 -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">🗂️ 文件管理</h2>
+                <div class="space-y-4">
+                    <button onclick="cleanupFiles()" 
+                            class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                        🗑️ 清理测试文件
+                    </button>
+                    <div id="cleanupResult" class="response-container"></div>
+                    
+                    <div class="mt-4">
+                        <h3 class="font-medium mb-2">📈 测试统计</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="bg-green-100 p-2 rounded">
+                                <div class="font-medium">成功测试</div>
+                                <div id="successCount" class="text-xl font-bold text-green-600">0</div>
+                            </div>
+                            <div class="bg-red-100 p-2 rounded">
+                                <div class="font-medium">失败测试</div>
+                                <div id="failureCount" class="text-xl font-bold text-red-600">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日志区域 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4">📝 测试日志</h2>
+            <div id="logContainer" class="bg-gray-50 p-4 rounded-md h-64 overflow-y-auto font-mono text-sm">
+                <div class="text-gray-500">等待测试开始...</div>
+            </div>
+            <div class="mt-4">
+                <button onclick="clearLogs()" 
+                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                    🗑️ 清空日志
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let successCount = 0;
+        let failureCount = 0;
+        const BASE_URL = '/test/nca/ffmpeg';
+
+        // 日志函数
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `mb-1 ${type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-gray-700'}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 显示结果
+        function showResult(containerId, content, isSuccess = true) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="p-3 rounded-md ${isSuccess ? 'success' : 'error'}">${content}</div>`;
+        }
+
+        // 更新统计
+        function updateStats(isSuccess) {
+            if (isSuccess) {
+                successCount++;
+                document.getElementById('successCount').textContent = successCount;
+            } else {
+                failureCount++;
+                document.getElementById('failureCount').textContent = failureCount;
+            }
+        }
+
+        // 清空日志
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '<div class="text-gray-500">日志已清空...</div>';
+        }
+
+        // 健康检查
+        async function checkHealth() {
+            try {
+                log('开始FFmpeg健康检查...');
+                const response = await fetch(`${BASE_URL}/health`);
+                const result = await response.json();
+                
+                if (result.status === 'healthy') {
+                    log('✅ FFmpeg健康检查通过', 'success');
+                    showResult('healthResult', `
+                        <strong>FFmpeg状态: 正常</strong><br>
+                        版本信息: ${result.version_info || '未知'}<br>
+                        FFmpeg路径: ${result.ffmpeg_path}<br>
+                        FFprobe路径: ${result.ffprobe_path}<br>
+                        输出目录: ${result.output_dir}
+                    `, true);
+                } else {
+                    log('❌ FFmpeg健康检查失败', 'error');
+                    showResult('healthResult', `FFmpeg不可用: ${JSON.stringify(result)}`, false);
+                }
+            } catch (error) {
+                log(`❌ 健康检查错误: ${error.message}`, 'error');
+                showResult('healthResult', `检查失败: ${error.message}`, false);
+            }
+        }
+
+        // 格式转换测试
+        async function testFormatConvert() {
+            const fileInput = document.getElementById('convertFile');
+            const targetFormat = document.getElementById('targetFormat').value;
+            
+            if (!fileInput.files[0]) {
+                alert('请选择要转换的文件');
+                return;
+            }
+
+            try {
+                log(`开始格式转换: ${fileInput.files[0].name} -> ${targetFormat}`);
+                
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('target_format', targetFormat);
+
+                const startTime = Date.now();
+                const response = await fetch(`${BASE_URL}/convert`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                const responseTime = Date.now() - startTime;
+
+                if (result.success) {
+                    log(`✅ 格式转换成功，用时: ${responseTime}ms`, 'success');
+                    showResult('convertResult', `
+                        <strong>转换成功!</strong><br>
+                        输出文件: ${result.output_file}<br>
+                        文件大小: ${(result.file_size / 1024 / 1024).toFixed(2)} MB<br>
+                        处理时间: ${result.processing_time.toFixed(2)} 秒<br>
+                        <a href="${result.download_url}" class="text-blue-600 underline" target="_blank">下载文件</a>
+                    `, true);
+                    updateStats(true);
+                } else {
+                    throw new Error(result.error || '转换失败');
+                }
+            } catch (error) {
+                log(`❌ 格式转换失败: ${error.message}`, 'error');
+                showResult('convertResult', `转换失败: ${error.message}`, false);
+                updateStats(false);
+            }
+        }
+
+        // 元数据获取测试
+        async function testGetMetadata() {
+            const fileInput = document.getElementById('metadataFile');
+            
+            if (!fileInput.files[0]) {
+                alert('请选择媒体文件');
+                return;
+            }
+
+            try {
+                log(`开始获取元数据: ${fileInput.files[0].name}`);
+                
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                const startTime = Date.now();
+                const response = await fetch(`${BASE_URL}/metadata`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                const responseTime = Date.now() - startTime;
+
+                if (result.success) {
+                    log(`✅ 元数据获取成功，用时: ${responseTime}ms`, 'success');
+                    
+                    // 格式化元数据显示
+                    const metadata = result.metadata;
+                    let metadataHtml = '<strong>元数据信息:</strong><br>';
+                    
+                    if (metadata.format) {
+                        metadataHtml += `<br><strong>格式信息:</strong><br>`;
+                        metadataHtml += `文件名: ${metadata.format.filename || 'N/A'}<br>`;
+                        metadataHtml += `格式: ${metadata.format.format_name || 'N/A'}<br>`;
+                        metadataHtml += `时长: ${metadata.format.duration || 'N/A'} 秒<br>`;
+                        metadataHtml += `大小: ${metadata.format.size || 'N/A'} 字节<br>`;
+                        metadataHtml += `比特率: ${metadata.format.bit_rate || 'N/A'} bps<br>`;
+                    }
+                    
+                    if (metadata.streams && metadata.streams.length > 0) {
+                        metadataHtml += `<br><strong>流信息 (${metadata.streams.length} 个流):</strong><br>`;
+                        metadata.streams.forEach((stream, index) => {
+                            metadataHtml += `<br>流 ${index + 1} (${stream.codec_type || 'unknown'}):<br>`;
+                            metadataHtml += `编解码器: ${stream.codec_name || 'N/A'}<br>`;
+                            if (stream.codec_type === 'video') {
+                                metadataHtml += `分辨率: ${stream.width || 'N/A'}x${stream.height || 'N/A'}<br>`;
+                                metadataHtml += `帧率: ${stream.r_frame_rate || 'N/A'}<br>`;
+                            } else if (stream.codec_type === 'audio') {
+                                metadataHtml += `采样率: ${stream.sample_rate || 'N/A'} Hz<br>`;
+                                metadataHtml += `声道: ${stream.channels || 'N/A'}<br>`;
+                            }
+                        });
+                    }
+                    
+                    showResult('metadataResult', metadataHtml, true);
+                    updateStats(true);
+                } else {
+                    throw new Error(result.error || '获取元数据失败');
+                }
+            } catch (error) {
+                log(`❌ 元数据获取失败: ${error.message}`, 'error');
+                showResult('metadataResult', `获取失败: ${error.message}`, false);
+                updateStats(false);
+            }
+        }
+
+        // 媒体剪切测试
+        async function testTrimMedia() {
+            const fileInput = document.getElementById('trimFile');
+            const startTime = document.getElementById('startTime').value;
+            const duration = document.getElementById('duration').value;
+            
+            if (!fileInput.files[0]) {
+                alert('请选择要剪切的媒体文件');
+                return;
+            }
+
+            try {
+                log(`开始媒体剪切: ${fileInput.files[0].name} (${startTime}s, ${duration}s)`);
+                
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('start_time', startTime);
+                formData.append('duration', duration);
+
+                const startTimeExec = Date.now();
+                const response = await fetch(`${BASE_URL}/trim`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                const responseTime = Date.now() - startTimeExec;
+
+                if (result.success) {
+                    log(`✅ 媒体剪切成功，用时: ${responseTime}ms`, 'success');
+                    showResult('trimResult', `
+                        <strong>剪切成功!</strong><br>
+                        输出文件: ${result.output_file}<br>
+                        文件大小: ${(result.file_size / 1024 / 1024).toFixed(2)} MB<br>
+                        处理时间: ${result.processing_time.toFixed(2)} 秒<br>
+                        <a href="${result.download_url}" class="text-blue-600 underline" target="_blank">下载文件</a>
+                    `, true);
+                    updateStats(true);
+                } else {
+                    throw new Error(result.error || '剪切失败');
+                }
+            } catch (error) {
+                log(`❌ 媒体剪切失败: ${error.message}`, 'error');
+                showResult('trimResult', `剪切失败: ${error.message}`, false);
+                updateStats(false);
+            }
+        }
+
+        // 清理文件
+        async function cleanupFiles() {
+            try {
+                log('开始清理测试文件...');
+                
+                const response = await fetch(`${BASE_URL}/cleanup`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    log(`✅ 文件清理成功: ${result.message}`, 'success');
+                    showResult('cleanupResult', result.message, true);
+                } else {
+                    throw new Error(result.error || '清理失败');
+                }
+            } catch (error) {
+                log(`❌ 文件清理失败: ${error.message}`, 'error');
+                showResult('cleanupResult', `清理失败: ${error.message}`, false);
+            }
+        }
+
+        // 页面加载完成后自动检查健康状态
+        $(document).ready(function() {
+            log('FFmpeg测试中心已加载');
+            checkHealth();
+        });
+    </script>
+</body>
+</html>

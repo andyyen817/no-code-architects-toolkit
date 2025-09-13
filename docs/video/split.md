@@ -1,4 +1,4 @@
-# Video Split Endpoint
+﻿# Video Split Endpoint
 
 ## 1. Overview
 

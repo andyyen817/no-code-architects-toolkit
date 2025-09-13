@@ -1,4 +1,4 @@
-# ZEABUR 環境變量設置完整指南
+﻿# ZEABUR 環境變量設置完整指南
 
 ## 🎯 目標
 為No-Code Architects Toolkit後端配置完整的ZEABUR環境變量，結合前端成功經驗和後端技術需求
@@ -15,7 +15,7 @@
 ### **1. 基礎Flask應用配置**
 ```bash
 # Flask應用基礎設置
-API_KEY=production-api-key-2024
+API_KEY=vidspark-production-api-key-2024-secure
 LOCAL_STORAGE_PATH=/app/output
 DEBUG=false
 FLASK_ENV=production
@@ -125,7 +125,7 @@ DB_AUTO_RECONNECT=true
 #### **基礎Flask配置（必需）**
 ```
 變量名: API_KEY
-變量值: production-api-key-2024
+變量值: vidspark-production-api-key-2024-secure
 
 變量名: LOCAL_STORAGE_PATH
 變量值: /app/output

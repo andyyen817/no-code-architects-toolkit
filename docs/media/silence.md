@@ -1,4 +1,4 @@
-# Silence Detection Endpoint
+﻿# Silence Detection Endpoint
 
 ## 1. Overview
 

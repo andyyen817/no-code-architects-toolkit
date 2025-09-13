@@ -1,4 +1,4 @@
-# Installing on Digital Ocean
+﻿# Installing on Digital Ocean
 
 This guide walks you through deploying the No-Code Architects Toolkit API on Digital Ocean's App Platform.
 

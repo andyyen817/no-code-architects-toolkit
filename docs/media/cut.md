@@ -1,4 +1,4 @@
-# Media Cut Endpoint
+﻿# Media Cut Endpoint
 
 ## 1. Overview
 

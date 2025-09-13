@@ -1,4 +1,4 @@
-# Media to MP3 Conversion
+﻿# Media to MP3 Conversion
 
 The `/v1/media/convert/mp3` endpoint is part of the Flask API application and is responsible for converting various media files into MP3 format. This endpoint is registered in the `app.py` file under the `v1_media_convert_mp3_bp` blueprint.
 

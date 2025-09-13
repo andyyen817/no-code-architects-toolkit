@@ -1,4 +1,4 @@
-# Video Captioning Endpoint (v1)
+﻿# Video Captioning Endpoint (v1)
 
 ## 1. Overview
 
