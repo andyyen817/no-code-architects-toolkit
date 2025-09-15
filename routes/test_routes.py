@@ -46,7 +46,7 @@ def get_db_connection():
 def nca_test_page():
     """No-Code Architects Toolkit 測試頁面 - 修復版"""
     try:
-        file_path = os.path.join(current_app.root_path, 'nca_cloud_test_fixed.html')
+        file_path = os.path.join(current_app.root_path, 'test-pages', 'nca_cloud_test_fixed.html')
         return send_file(file_path, mimetype='text/html')
     except Exception as e:
         return jsonify({'error': f'頁面載入失敗: {str(e)}'}), 500
@@ -55,7 +55,7 @@ def nca_test_page():
 def nca_test_page_original():
     """No-Code Architects Toolkit 測試頁面 - 原版（有問題）"""
     try:
-        file_path = os.path.join(current_app.root_path, 'nca_cloud_test.html')
+        file_path = os.path.join(current_app.root_path, 'test-pages', 'nca_cloud_test.html')
         return send_file(file_path, mimetype='text/html')
     except Exception as e:
         return jsonify({'error': f'頁面載入失敗: {str(e)}'}), 500
@@ -64,7 +64,7 @@ def nca_test_page_original():
 def ffmpeg_test_page():
     """FFMPEG 測試頁面"""
     try:
-        file_path = os.path.join(current_app.root_path, 'ffmpeg_cloud_test.html')
+        file_path = os.path.join(current_app.root_path, 'test-pages', 'ffmpeg_cloud_test.html')
         return send_file(file_path, mimetype='text/html')
     except Exception as e:
         return jsonify({'error': f'頁面載入失敗: {str(e)}'}), 500
@@ -73,7 +73,7 @@ def ffmpeg_test_page():
 def genhuman_test_page():
     """GenHuman API 測試頁面"""
     try:
-        file_path = os.path.join(current_app.root_path, 'genhuman_cloud_test.html')
+        file_path = os.path.join(current_app.root_path, 'test-pages', 'genhuman_cloud_test.html')
         return send_file(file_path, mimetype='text/html')
     except Exception as e:
         return jsonify({'error': f'頁面載入失敗: {str(e)}'}), 500
