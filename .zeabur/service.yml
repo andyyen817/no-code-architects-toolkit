@@ -1,6 +1,6 @@
 name: vidspark-backend
 type: dockerfile
-dockerfile: Dockerfile.minimal
+dockerfile: Dockerfile.zeabur
 port: 8080
 domains:
   - domain: vidspark-backend.zeabur.app
