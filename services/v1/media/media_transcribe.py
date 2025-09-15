@@ -20,7 +20,6 @@ import os
 import whisper
 import srt
 from datetime import timedelta
-from whisper.utils import WriteSRT, WriteVTT
 from services.file_management import download_file
 import logging
 from config import LOCAL_STORAGE_PATH
@@ -37,8 +36,8 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
 
     try:
         # Load a larger model for better translation quality
-        #model_size = "large" if task == "translate" else "base"
-        model_size = "base"
+        #model_size = "large" if task == "translate" else "small"
+        model_size = "small"
         model = whisper.load_model(model_size)
         logger.info(f"Loaded Whisper {model_size} model")
 
@@ -55,7 +54,10 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
 
         result = model.transcribe(input_filename, **options)
         
-        # For translation task, the result['text'] will be in English
+        # Convert segments to list for compatibility
+        segments_list = result['segments']
+        
+        # For translation task, the result will be in English
         text = None
         srt_text = None
         segments_json = None
@@ -63,7 +65,7 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
         logger.info(f"Generated {task} output")
 
         if include_text is True:
-            text = result['text']
+            text = ' '.join([segment.text for segment in segments_list])
 
         if include_srt is True:
             srt_subtitles = []
@@ -74,10 +76,10 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
                 all_words = []
                 word_timings = []
                 
-                for segment in result['segments']:
-                    words = segment['text'].strip().split()
-                    segment_start = segment['start']
-                    segment_end = segment['end']
+                for segment in segments_list:
+                    words = segment.text.strip().split()
+                    segment_start = segment.start
+                    segment_end = segment.end
                     
                     # Calculate timing for each word
                     if words:
@@ -109,17 +111,31 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
                     current_word += words_per_line
             else:
                 # Original behavior - one subtitle per segment
-                for segment in result['segments']:
-                    start = timedelta(seconds=segment['start'])
-                    end = timedelta(seconds=segment['end'])
-                    segment_text = segment['text'].strip()
+                for segment in segments_list:
+                    start = timedelta(seconds=segment.start)
+                    end = timedelta(seconds=segment.end)
+                    segment_text = segment.text.strip()
                     srt_subtitles.append(srt.Subtitle(subtitle_index, start, end, segment_text))
                     subtitle_index += 1
             
             srt_text = srt.compose(srt_subtitles)
 
         if include_segments is True:
-            segments_json = result['segments']
+            # Convert segments to dict format for JSON compatibility
+            segments_json = []
+            for segment in segments_list:
+                segment_dict = {
+                    'start': segment.start,
+                    'end': segment.end,
+                    'text': segment.text
+                }
+                if hasattr(segment, 'words') and segment.words:
+                    segment_dict['words'] = [{
+                        'word': word.word,
+                        'start': word.start,
+                        'end': word.end
+                    } for word in segment.words]
+                segments_json.append(segment_dict)
 
         os.remove(input_filename)
         logger.info(f"Removed local file: {input_filename}")

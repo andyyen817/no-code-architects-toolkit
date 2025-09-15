@@ -15,7 +15,7 @@ except ImportError:
 import os
 import sys
 import logging
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 
@@ -89,6 +89,14 @@ def create_app():
 
 def register_routes(app):
     """註冊基礎路由"""
+    
+    # 添加静态文件服务路由
+    @app.route('/uploads/<filename>')
+    def uploaded_file(filename):
+        """提供上传文件的静态文件服务"""
+        from config import get_storage_config
+        upload_folder = get_storage_config()['upload_folder']
+        return send_from_directory(upload_folder, filename)
     
     @app.route('/', methods=['GET'])
     def index():

@@ -64,15 +64,17 @@ def rgb_to_ass_color(rgb_color):
 
 def generate_transcription(video_path, language='auto'):
     try:
-        model = whisper.load_model("base")
-        transcription_options = {
-            'word_timestamps': True,
-            'verbose': True,
-        }
-        if language != 'auto':
-            transcription_options['language'] = language
-        result = model.transcribe(video_path, **transcription_options)
-        logger.info(f"Transcription generated successfully for video: {video_path}")
+        # 使用openai-whisper small模型統一轉錄
+        model = whisper.load_model("small")
+        
+        # openai-whisper的API調用
+        result = model.transcribe(
+            video_path, 
+            language=None if language == 'auto' else language,
+            word_timestamps=True
+        )
+        
+        logger.info(f"Transcription generated successfully for video: {video_path} using openai-whisper small model")
         return result
     except Exception as e:
         logger.error(f"Error in transcription: {str(e)}")
@@ -317,7 +319,7 @@ def handle_classic(transcription_result, style_options, replace_dict, video_reso
     """
     max_words_per_line = int(style_options.get('max_words_per_line', 0))
     all_caps = style_options.get('all_caps', False)
-    if style_options['font_size'] is None:
+    if style_options.get('font_size') is None:
         style_options['font_size'] = int(video_resolution[1] * 0.05)
 
     position_str = style_options.get('position', 'middle_center')
@@ -624,6 +626,9 @@ def srt_to_ass(transcription_result, style_type, settings, replace_dict, video_r
         'position': 'middle_center',
         'alignment': 'center'  # default alignment
     }
+    # Ensure settings is a dictionary
+    if not isinstance(settings, dict):
+        settings = {}
     style_options = {**default_style_settings, **settings}
 
     if style_options['font_size'] is None:
@@ -835,14 +840,14 @@ def generate_ass_captions_v1(video_url, captions, settings, replace, exclude_tim
                     return {"error": error_message}
                 transcription_result = srt_to_transcription_result(captions_content)
                 # Generate ASS based on chosen style
-                subtitle_content = process_subtitle_events(transcription_result, style_type, style_options, replace_dict, video_resolution)
+                subtitle_content = process_subtitle_events(transcription_result, style_type, settings, replace_dict, video_resolution)
                 subtitle_type = 'ass'
         else:
             # No captions provided, generate transcription
             logger.info(f"Job {job_id}: No captions provided, generating transcription.")
             transcription_result = generate_transcription(video_path, language=language)
             # Generate ASS based on chosen style
-            subtitle_content = process_subtitle_events(transcription_result, style_type, style_options, replace_dict, video_resolution)
+            subtitle_content = process_subtitle_events(transcription_result, style_type, settings, replace_dict, video_resolution)
             subtitle_type = 'ass'
 
         # Check for subtitle processing errors
@@ -864,8 +869,12 @@ def generate_ass_captions_v1(video_url, captions, settings, replace, exclude_tim
 
         # Save the subtitle content
         subtitle_filename = f"{job_id}.{subtitle_type}"
-        subtitle_path = os.path.join(LOCAL_STORAGE_PATH, subtitle_filename)
+        # Convert relative path to absolute path to avoid FFmpeg path issues
+        absolute_storage_path = os.path.abspath(LOCAL_STORAGE_PATH)
+        subtitle_path = os.path.join(absolute_storage_path, subtitle_filename)
         try:
+            # Ensure the directory exists
+            os.makedirs(absolute_storage_path, exist_ok=True)
             with open(subtitle_path, 'w', encoding='utf-8') as f:
                 f.write(subtitle_content)
             logger.info(f"Job {job_id}: Subtitle file saved to {subtitle_path}")

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字幕功能測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .file-input {
+            margin: 10px 0;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-section {
+            margin-top: 30px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .transcription {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .srt-content {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 字幕功能測試</h1>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="upload-section">
+            <h3>上傳音頻文件</h3>
+            <p>支持格式：MP3, WAV, M4A, FLAC</p>
+            <input type="file" id="audioFile" class="file-input" accept="audio/*">
+            <br><br>
+            <button id="transcribeBtn" class="btn" onclick="transcribeAudio()">開始轉錄</button>
+        </div>
+        
+        <div id="result" class="result-section" style="display: none;">
+            <h3>轉錄結果</h3>
+            <div id="transcriptionResult"></div>
+            
+            <h3>SRT字幕</h3>
+            <div id="srtResult"></div>
+            
+            <button id="downloadBtn" class="btn" onclick="downloadSRT()" style="display: none;">下載SRT文件</button>
+        </div>
+    </div>
+
+    <script>
+        let currentTranscription = null;
+        let currentSRT = null;
+        
+        // 檢查服務器狀態
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('status');
+                if (data.status === 'ok') {
+                    statusDiv.innerHTML = '✅ 服務器運行正常，Whisper模型已準備就緒';
+                    statusDiv.className = 'status success';
+                } else {
+                    statusDiv.innerHTML = '⚠️ 服務器狀態異常';
+                    statusDiv.className = 'status error';
+                }
+            } catch (error) {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = '❌ 無法連接到服務器';
+                statusDiv.className = 'status error';
+            }
+        }
+        
+        async function transcribeAudio() {
+            const fileInput = document.getElementById('audioFile');
+            const transcribeBtn = document.getElementById('transcribeBtn');
+            const resultDiv = document.getElementById('result');
+            const transcriptionDiv = document.getElementById('transcriptionResult');
+            
+            if (!fileInput.files[0]) {
+                alert('請選擇音頻文件');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('audio', fileInput.files[0]);
+            
+            transcribeBtn.disabled = true;
+            transcribeBtn.textContent = '轉錄中...';
+            transcriptionDiv.innerHTML = '<div class="loading">正在處理音頻文件，請稍候...</div>';
+            resultDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch('/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentTranscription = data.transcription;
+                    
+                    transcriptionDiv.innerHTML = `
+                        <div class="success">✅ 轉錄成功！</div>
+                        <p><strong>語言：</strong>${data.transcription.language}</p>
+                        <div class="transcription">${data.transcription.text}</div>
+                    `;
+                    
+                    // 生成SRT字幕
+                    await generateSRT(data.transcription.segments);
+                } else {
+                    transcriptionDiv.innerHTML = `<div class="error">❌ 轉錄失敗：${data.error}</div>`;
+                }
+            } catch (error) {
+                transcriptionDiv.innerHTML = `<div class="error">❌ 請求失敗：${error.message}</div>`;
+            } finally {
+                transcribeBtn.disabled = false;
+                transcribeBtn.textContent = '開始轉錄';
+            }
+        }
+        
+        async function generateSRT(segments) {
+            const srtDiv = document.getElementById('srtResult');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            try {
+                const response = await fetch('/generate_srt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ segments: segments })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentSRT = data.srt_content;
+                    srtDiv.innerHTML = `
+                        <div class="success">✅ SRT字幕生成成功！</div>
+                        <div class="srt-content">${data.srt_content}</div>
+                    `;
+                    downloadBtn.style.display = 'inline-block';
+                } else {
+                    srtDiv.innerHTML = `<div class="error">❌ SRT生成失敗：${data.error}</div>`;
+                }
+            } catch (error) {
+                srtDiv.innerHTML = `<div class="error">❌ SRT生成請求失敗：${error.message}</div>`;
+            }
+        }
+        
+        function downloadSRT() {
+            if (!currentSRT) return;
+            
+            const blob = new Blob([currentSRT], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'subtitles.srt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // 頁面加載時檢查服務器狀態
+        window.onload = function() {
+            checkServerStatus();
+        };
+    </script>
+</body>
+</html>

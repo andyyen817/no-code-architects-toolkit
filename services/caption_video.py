@@ -30,15 +30,19 @@ STORAGE_PATH = "/tmp/"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Define the path to the fonts directory
-FONTS_DIR = '/usr/share/fonts/custom'
+# Define the path to the fonts directory (Windows compatible)
+FONTS_DIR = 'C:\\Windows\\Fonts'
 
 # Create the FONT_PATHS dictionary by reading the fonts directory
 FONT_PATHS = {}
-for font_file in os.listdir(FONTS_DIR):
-    if font_file.endswith('.ttf') or font_file.endswith('.TTF'):
-        font_name = os.path.splitext(font_file)[0]
-        FONT_PATHS[font_name] = os.path.join(FONTS_DIR, font_file)
+try:
+    for font_file in os.listdir(FONTS_DIR):
+        if font_file.endswith('.ttf') or font_file.endswith('.TTF'):
+            font_name = os.path.splitext(font_file)[0]
+            FONT_PATHS[font_name] = os.path.join(FONTS_DIR, font_file)
+except Exception as e:
+    logger.warning(f"Could not load fonts from {FONTS_DIR}: {e}")
+    FONT_PATHS = {}
 # logger.info(f"Available fonts: {FONT_PATHS}")
 
 # Create a list of acceptable font names
@@ -47,30 +51,14 @@ ACCEPTABLE_FONTS = list(FONT_PATHS.keys())
 
 # Match font files with fontconfig names
 def match_fonts():
+    """Match fonts - Windows compatible version"""
     try:
-        result = subprocess.run(['fc-list', ':family'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if result.returncode == 0:
-            fontconfig_fonts = result.stdout.split('\n')
-            fontconfig_fonts = list(set(fontconfig_fonts))  # Remove duplicates
-            matched_fonts = {}
-            for font_file in FONT_PATHS.keys():
-                for fontconfig_font in fontconfig_fonts:
-                    if font_file.lower() in fontconfig_font.lower():
-                        matched_fonts[font_file] = fontconfig_font.strip()
-
-            # Parse and output the matched font names
-            unique_font_names = set()
-            for font in matched_fonts.values():
-                font_name = font.split(':')[1].strip()
-                unique_font_names.add(font_name)
-            
-            # Remove duplicates from font_name and sort them alphabetically
-            unique_font_names = sorted(list(set(unique_font_names)))
-            
-            # for font_name in unique_font_names:
-            #     print(font_name)
+        # On Windows, we already have the font paths from FONT_PATHS
+        # No need to use fc-list which is Linux-specific
+        if FONT_PATHS:
+            logger.info(f"Found {len(FONT_PATHS)} fonts in Windows Fonts directory")
         else:
-            logger.error(f"Error matching fonts: {result.stderr}")
+            logger.warning("No fonts found in Windows Fonts directory")
     except Exception as e:
         logger.error(f"Exception while matching fonts: {str(e)}")
 

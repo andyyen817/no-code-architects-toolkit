@@ -220,6 +220,18 @@ def is_development() -> bool:
     """檢查是否為開發環境"""
     return get_app_config().is_development()
 
+def validate_env_vars(required_vars: list) -> bool:
+    """驗證必需的環境變量是否存在"""
+    missing_vars = []
+    for var in required_vars:
+        if not os.getenv(var):
+            missing_vars.append(var)
+    
+    if missing_vars:
+        logger.warning(f"缺少環境變量: {', '.join(missing_vars)}")
+        return False
+    return True
+
 # 向后兼容的常量定义
 LOCAL_STORAGE_PATH = get_storage_config()['upload_folder']
 API_KEY = get_app_config().app_config['api_key']

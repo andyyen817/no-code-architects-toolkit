@@ -20,7 +20,6 @@ import os
 import whisper
 import srt
 from datetime import timedelta
-from whisper.utils import WriteSRT, WriteVTT
 from services.file_management import download_file
 import logging
 import uuid
@@ -73,10 +72,10 @@ def process_transcription(media_url, output_type, max_chars=56, language=None,):
             result = model.transcribe(
                 input_filename,
                 word_timestamps=True,
-                task='transcribe',
-                verbose=False
+                task='transcribe'
             )
             logger.info("Transcription completed with word-level timestamps")
+            
             # Generate ASS subtitle content
             ass_content = generate_ass_subtitle(result, max_chars)
             logger.info("Generated ASS subtitle content")

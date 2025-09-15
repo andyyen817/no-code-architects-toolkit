@@ -16,8 +16,8 @@
 
 
 
-from flask import Blueprint, jsonify
-from app_utils import validate_payload, queue_task_wrapper
+from flask import Blueprint, jsonify, request
+from app_utils import validate_payload
 import logging
 from services.ass_toolkit import generate_ass_captions_v1
 from services.authentication import authenticate
@@ -104,8 +104,8 @@ logger = logging.getLogger(__name__)
     "required": ["video_url"],
     "additionalProperties": False
 })
-@queue_task_wrapper(bypass_queue=False)
-def caption_video_v1(job_id, data):
+def caption_video_v1():
+    data = request.get_json()
     video_url = data['video_url']
     captions = data.get('captions')
     settings = data.get('settings', {})
@@ -114,6 +114,10 @@ def caption_video_v1(job_id, data):
     webhook_url = data.get('webhook_url')
     id = data.get('id')
     language = data.get('language', 'auto')
+    
+    # Generate a simple job ID for logging
+    import uuid
+    job_id = str(uuid.uuid4())[:8]
 
     logger.info(f"Job {job_id}: Received v1 captioning request for {video_url}")
     logger.info(f"Job {job_id}: Settings received: {settings}")
@@ -132,10 +136,10 @@ def caption_video_v1(job_id, data):
             # Check if this is a font-related error by checking for 'available_fonts' key
             if 'available_fonts' in output:
                 # Font error scenario
-                return {"error": output['error'], "available_fonts": output['available_fonts']}, "/v1/video/caption", 400
+                return jsonify({"error": output['error'], "available_fonts": output['available_fonts']}), 400
             else:
                 # Non-font error scenario, do not return available_fonts
-                return {"error": output['error']}, "/v1/video/caption", 400
+                return jsonify({"error": output['error']}), 400
 
         # If processing was successful, output is the ASS file path
         ass_path = output
@@ -154,20 +158,46 @@ def caption_video_v1(job_id, data):
             logger.info(f"Job {job_id}: Video downloaded to {video_path}")
         except Exception as e:
             logger.error(f"Job {job_id}: Video download error: {str(e)}")
-            return {"error": str(e)}, "/v1/video/caption", 500
+            return jsonify({"error": str(e)}), 500
 
         # Render the video with subtitles using FFmpeg
         try:
             import ffmpeg
-            ffmpeg.input(video_path).output(
-                output_path,
-                vf=f"subtitles='{ass_path}'",
-                acodec='copy'
-            ).run(overwrite_output=True)
+            # Process video with FFmpeg using relative paths to avoid Windows path issues
+            logger.info(f"Job {job_id}: Processing video with FFmpeg: {video_path} -> {output_path}")
+            logger.info(f"Job {job_id}: Using subtitle file: {ass_path}")
+            
+            # Get the directory containing the files
+            video_dir = os.path.dirname(os.path.abspath(video_path))
+            
+            # Get relative filenames
+            rel_video = os.path.basename(video_path)
+            rel_ass = os.path.basename(ass_path)
+            rel_output = os.path.basename(output_path)
+            
+            logger.info(f"Job {job_id}: Working directory: {video_dir}")
+            logger.info(f"Job {job_id}: Relative paths - Video: {rel_video}, ASS: {rel_ass}, Output: {rel_output}")
+            
+            # Change to the directory containing the files and run FFmpeg with relative paths
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(video_dir)
+                logger.info(f"Job {job_id}: Changed working directory to: {video_dir}")
+                
+                ffmpeg.input(rel_video).output(
+                    rel_output,
+                    vf=f"subtitles={rel_ass}",
+                    acodec='copy'
+                ).run(overwrite_output=True)
+                
+            finally:
+                # Always restore original working directory
+                os.chdir(original_cwd)
+                logger.info(f"Job {job_id}: Restored working directory to: {original_cwd}")
             logger.info(f"Job {job_id}: FFmpeg processing completed. Output saved to {output_path}")
         except Exception as e:
             logger.error(f"Job {job_id}: FFmpeg error: {str(e)}")
-            return {"error": f"FFmpeg error: {str(e)}"}, "/v1/video/caption", 500
+            return jsonify({"error": f"FFmpeg error: {str(e)}"}), 500
 
         # Clean up the ASS file after use
         os.remove(ass_path)
@@ -180,8 +210,12 @@ def caption_video_v1(job_id, data):
         os.remove(output_path)
         logger.info(f"Job {job_id}: Cleaned up local output file")
 
-        return cloud_url, "/v1/video/caption", 200
+        return jsonify({
+            "job_id": job_id,
+            "response": cloud_url,
+            "message": "success"
+        }), 200
 
     except Exception as e:
         logger.error(f"Job {job_id}: Error during captioning process - {str(e)}", exc_info=True)
-        return {"error": str(e)}, "/v1/video/caption", 500
+        return jsonify({"error": str(e)}), 500

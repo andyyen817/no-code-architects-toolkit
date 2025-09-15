@@ -86,6 +86,30 @@ class S3CompatibleProvider(CloudStorageProvider):
     def upload_file(self, file_path: str) -> str:
         return upload_to_s3(file_path, self.endpoint_url, self.access_key, self.secret_key, self.bucket_name, self.region)
 
+class LocalStorageProvider(CloudStorageProvider):
+    def __init__(self):
+        from config import get_storage_config
+        self.upload_folder = get_storage_config()['upload_folder']
+        # Ensure the upload folder exists
+        os.makedirs(self.upload_folder, exist_ok=True)
+        
+    def upload_file(self, file_path: str) -> str:
+        """Copy file to local storage and return a local URL"""
+        import shutil
+        import uuid
+        
+        # Generate unique filename
+        filename = os.path.basename(file_path)
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"{name}_{uuid.uuid4().hex[:8]}{ext}"
+        
+        # Copy to upload folder
+        destination = os.path.join(self.upload_folder, unique_filename)
+        shutil.copy2(file_path, destination)
+        
+        # Return local URL (assuming the app serves files from /uploads)
+        return f"http://localhost:5000/uploads/{unique_filename}"
+
 def get_storage_provider() -> CloudStorageProvider:
     
     if os.getenv('S3_ENDPOINT_URL'):
@@ -103,7 +127,9 @@ def get_storage_provider() -> CloudStorageProvider:
         validate_env_vars('GCP')
         return GCPStorageProvider()
     
-    raise ValueError(f"No cloud storage settings provided.")
+    # Fallback to local storage if no cloud storage is configured
+    logger.info("No cloud storage configured, using local storage")
+    return LocalStorageProvider()
 
 def upload_file(file_path: str) -> str:
     provider = get_storage_provider()
