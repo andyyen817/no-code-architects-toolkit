@@ -1,4 +1,4 @@
-﻿# 🏗️ Zeabur持久化存儲完整解決方案
+# 🏗️ Zeabur持久化存儲完整解決方案
 
 ## 📋 問題分析總結
 
@@ -206,12 +206,12 @@
 2. **驗證持久化**
    ```bash
    # 測試文件上傳
-   curl -X POST https://your-domain.zeabur.app/api/file/upload \
+   curl -X POST https://vidsparkback.zeabur.app/api/file/upload \
         -H "X-API-Key: your-api-key" \
         -F "file=@test.mp4"
    
    # 重啟服務後檢查文件是否仍存在
-   curl https://your-domain.zeabur.app/nca/files/health \
+   curl https://vidsparkback.zeabur.app/nca/files/health \
         -H "X-API-Key: your-api-key"
    ```
 
@@ -221,17 +221,17 @@
 
 ```bash
 # 檢查無效記錄
-curl -X GET https://your-domain.zeabur.app/v1/database/file-cleanup/check \
+curl -X GET https://vidsparkback.zeabur.app/v1/database/file-cleanup/check \
      -H "X-API-Key: your-api-key"
 
 # 試運行清理（不實際刪除）
-curl -X POST https://your-domain.zeabur.app/v1/database/file-cleanup/cleanup \
+curl -X POST https://vidsparkback.zeabur.app/v1/database/file-cleanup/cleanup \
      -H "X-API-Key: your-api-key" \
      -H "Content-Type: application/json" \
      -d '{"dry_run": true}'
 
 # 實際清理無效記錄
-curl -X POST https://your-domain.zeabur.app/v1/database/file-cleanup/cleanup \
+curl -X POST https://vidsparkback.zeabur.app/v1/database/file-cleanup/cleanup \
      -H "X-API-Key: your-api-key" \
      -H "Content-Type: application/json" \
      -d '{"dry_run": false}'
@@ -241,7 +241,7 @@ curl -X POST https://your-domain.zeabur.app/v1/database/file-cleanup/cleanup \
 
 ```bash
 # 獲取文件統計
-curl -X GET https://your-domain.zeabur.app/v1/database/file-cleanup/stats \
+curl -X GET https://vidsparkback.zeabur.app/v1/database/file-cleanup/stats \
      -H "X-API-Key: your-api-key"
 ```
 

@@ -1,4 +1,4 @@
-﻿# Zeabur 部署和持久化存儲配置指南
+# Zeabur 部署和持久化存儲配置指南
 
 ## 📋 概述
 
@@ -189,17 +189,17 @@ API_KEY=your-production-api-key-here
 
 **檢查存儲狀態**
 ```bash
-curl -X GET "https://your-app.zeabur.app/api/v1/storage/status"
+curl -X GET "https://vidsparkback.zeabur.app/api/v1/storage/status"
 ```
 
 **檢查存儲健康**
 ```bash
-curl -X GET "https://your-app.zeabur.app/api/v1/storage/health"
+curl -X GET "https://vidsparkback.zeabur.app/api/v1/storage/health"
 ```
 
 **查看存儲使用情況** (需要 API 密鑰)
 ```bash
-curl -X GET "https://your-app.zeabur.app/api/v1/storage/usage" \
+curl -X GET "https://vidsparkback.zeabur.app/api/v1/storage/usage" \
   -H "X-API-Key: your-api-key"
 ```
 
@@ -227,7 +227,7 @@ curl -X GET "https://your-app.zeabur.app/api/v1/storage/usage" \
 **定期檢查存儲使用情況**
 ```bash
 # 每日檢查腳本
-curl -X GET "https://your-app.zeabur.app/api/v1/storage/usage" \
+curl -X GET "https://vidsparkback.zeabur.app/api/v1/storage/usage" \
   -H "X-API-Key: your-api-key" | jq '.data.total_size_gb'
 ```
 
@@ -239,7 +239,7 @@ curl -X GET "https://your-app.zeabur.app/api/v1/storage/usage" \
 
 **清理臨時文件** (建議每日執行)
 ```bash
-curl -X POST "https://your-app.zeabur.app/api/v1/storage/cleanup" \
+curl -X POST "https://vidsparkback.zeabur.app/api/v1/storage/cleanup" \
   -H "X-API-Key: your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"max_age_hours": 24}'
@@ -247,7 +247,7 @@ curl -X POST "https://your-app.zeabur.app/api/v1/storage/cleanup" \
 
 **數據庫清理** (建議每週執行)
 ```bash
-curl -X POST "https://your-app.zeabur.app/api/v1/database/cleanup_invalid_records" \
+curl -X POST "https://vidsparkback.zeabur.app/api/v1/database/cleanup_invalid_records" \
   -H "X-API-Key: your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"dry_run": false}'
