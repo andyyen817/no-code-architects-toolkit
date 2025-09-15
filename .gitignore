@@ -51,6 +51,8 @@ tmp/
 # FFmpeg binaries (will be installed in container)
 ffmpeg-binary/
 ffmpeg/
+ffmpeg.zip
+ffmpeg-8.0-essentials_build/
 
 # Logs
 *.log
