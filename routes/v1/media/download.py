@@ -2,7 +2,6 @@ from flask import Blueprint
 from app_utils import *
 import logging
 import os
-import yt_dlp
 import tempfile
 from werkzeug.utils import secure_filename
 import uuid
@@ -11,6 +10,14 @@ from services.authentication import authenticate
 from services.file_management import download_file
 from urllib.parse import quote, urlparse
 import requests
+
+# Conditional import for yt_dlp
+try:
+    import yt_dlp
+    YT_DLP_AVAILABLE = True
+except ImportError:
+    YT_DLP_AVAILABLE = False
+    yt_dlp = None
 
 v1_media_download_bp = Blueprint('v1_media_download', __name__)
 logger = logging.getLogger(__name__)
@@ -83,6 +90,10 @@ logger = logging.getLogger(__name__)
 })
 @queue_task_wrapper(bypass_queue=False)
 def download_media(job_id, data):
+    if not YT_DLP_AVAILABLE:
+        logger.error(f"Job {job_id}: yt-dlp module is not available")
+        return "yt-dlp module is not available. Media download functionality is disabled.", "/v1/media/download", 500
+    
     media_url = data['media_url']
     cookie = data.get('cookie')
 
@@ -286,4 +297,4 @@ def download_media(job_id, data):
 
     except Exception as e:
         logger.error(f"Job {job_id}: Error during download process - {str(e)}")
-        return str(e), "/v1/media/download", 500 
+        return str(e), "/v1/media/download", 500

@@ -65,6 +65,7 @@ def create_app():
     critical_blueprints = [
         ('routes.caption_video', 'caption_bp'),
         ('routes.v1.video.caption_video', 'v1_video_caption_bp'),
+        ('routes.caption_video_minimal', 'caption_minimal_bp'),
         ('routes.debug_import_errors', 'debug_import_bp'),
         ('routes.transcribe_media', 'transcribe_bp'),
         ('routes.v1.media.transcribe', 'v1_media_transcribe_bp'),

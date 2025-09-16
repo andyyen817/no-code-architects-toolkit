@@ -27,6 +27,11 @@ import os
 from services.v1.image.screenshot_webpage import take_screenshot
 from services.authentication import authenticate
 from services.cloud_storage import upload_file
+from io import BytesIO
+
+# Set up logging first
+logger = logging.getLogger(__name__)
+
 # Playwright dependencies - conditional import
 try:
     from playwright.sync_api import sync_playwright
@@ -34,11 +39,8 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
     logger.warning('Playwright not available - screenshot functionality disabled')
-from io import BytesIO
-
 
 v1_image_screenshot_webpage_bp = Blueprint('v1_image_screenshot_webpage', __name__)
-logger = logging.getLogger(__name__)
 
 
 @v1_image_screenshot_webpage_bp.route('/v1/image/screenshot/webpage', methods=['POST'])

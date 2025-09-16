@@ -17,12 +17,19 @@
 
 
 import os
-import whisper
 import srt
 from datetime import timedelta
 from services.file_management import download_file
 import logging
 import uuid
+
+# Conditional import for whisper
+try:
+    import whisper
+    WHISPER_AVAILABLE = True
+except ImportError:
+    WHISPER_AVAILABLE = False
+    whisper = None
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -33,6 +40,9 @@ STORAGE_PATH = "/tmp/"
 
 def process_transcription(media_url, output_type, max_chars=56, language=None,):
     """Transcribe media and return the transcript, SRT or ASS file path."""
+    if not WHISPER_AVAILABLE:
+        raise ImportError("Whisper module is not available. Transcription functionality is disabled.")
+    
     logger.info(f"Starting transcription for media URL: {media_url} with output type: {output_type}")
     input_filename = download_file(media_url, os.path.join(STORAGE_PATH, 'input_media'))
     logger.info(f"Downloaded media to local file: {input_filename}")

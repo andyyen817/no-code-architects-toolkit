@@ -17,17 +17,27 @@
 
 
 import os
-import boto3
 import logging
 import requests
 from urllib.parse import urlparse, unquote, quote
 import uuid
 import re
 
+# Conditional import for boto3
+try:
+    import boto3
+    BOTO3_AVAILABLE = True
+except ImportError:
+    BOTO3_AVAILABLE = False
+    boto3 = None
+
 logger = logging.getLogger(__name__)
 
 def get_s3_client():
     """Create and return an S3 client using environment variables."""
+    if not BOTO3_AVAILABLE:
+        raise ImportError("boto3 module is not available. S3 functionality is disabled.")
+    
     endpoint_url = os.getenv('S3_ENDPOINT_URL')
     access_key = os.getenv('S3_ACCESS_KEY')
     secret_key = os.getenv('S3_SECRET_KEY')
