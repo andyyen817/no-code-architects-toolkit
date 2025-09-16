@@ -98,6 +98,12 @@ def register_routes(app):
         upload_folder = get_storage_config()['upload_folder']
         return send_from_directory(upload_folder, filename)
     
+    # 添加静态文件路由
+    @app.route('/static/<path:filename>')
+    def static_files(filename):
+        """提供静态文件服务"""
+        return send_from_directory('static', filename)
+    
     @app.route('/', methods=['GET'])
     def index():
         """首頁"""
