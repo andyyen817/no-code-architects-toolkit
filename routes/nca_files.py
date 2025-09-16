@@ -93,6 +93,52 @@ def serve_nca_file(file_type, file_path):
             else:
                 logger.info(f"❌ 文件不存在 - {strategy}: {path}")
         
+        # 🚨 新增：如果精確匹配失敗，嘗試前綴匹配（處理帶後綴的文件）
+        if not found_file_path:
+            logger.info("🔍 精確匹配失敗，嘗試前綴匹配...")
+            
+            # 提取原始文件名（不含擴展名）
+            original_filename = os.path.splitext(os.path.basename(normalized_file_path))[0]
+            file_extension = os.path.splitext(normalized_file_path)[1]
+            
+            logger.info(f"🔍 原始文件名: {original_filename}, 擴展名: {file_extension}")
+            
+            # 在每個可能的目錄中搜索前綴匹配的文件
+            search_directories = [
+                nca_storage_dir,  # 標準目錄
+                os.path.join(output_dir, file_type),  # 舊版目錄
+                output_dir  # 根目錄
+            ]
+            
+            for search_dir in search_directories:
+                if not os.path.exists(search_dir):
+                    continue
+                    
+                # 檢查目錄及其子目錄
+                for root, dirs, files in os.walk(search_dir):
+                    for filename in files:
+                        # 檢查文件是否以原始文件名開頭且有相同擴展名
+                        if (filename.startswith(original_filename) and 
+                            filename.endswith(file_extension) and 
+                            filename != os.path.basename(normalized_file_path)):
+                            
+                            candidate_path = os.path.join(root, filename)
+                            logger.info(f"🔍 找到前綴匹配文件: {candidate_path}")
+                            
+                            # 驗證這是一個有效的變體（包含常見後綴）
+                            valid_suffixes = ['_trim_', '_cut_', '_process_', '_convert_', '_captioned']
+                            if any(suffix in filename for suffix in valid_suffixes):
+                                found_file_path = candidate_path
+                                found_strategy = f"前綴匹配 ({os.path.relpath(search_dir, output_dir)})"
+                                logger.info(f"✅ 前綴匹配成功 - {found_strategy}: {found_file_path}")
+                                break
+                    
+                    if found_file_path:
+                        break
+                
+                if found_file_path:
+                    break
+        
         if not found_file_path:
             logger.warning(f"🚨 所有路徑都未找到文件: {file_path}")
             

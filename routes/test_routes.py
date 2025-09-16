@@ -78,6 +78,31 @@ def genhuman_test_page():
     except Exception as e:
         return jsonify({'error': f'頁面載入失敗: {str(e)}'}), 500
 
+# 路由檢查API
+@test_bp.route('/routes')
+def list_all_routes():
+    """顯示所有註冊的路由"""
+    try:
+        routes = []
+        for rule in current_app.url_map.iter_rules():
+            routes.append({
+                'path': rule.rule,
+                'methods': [m for m in rule.methods if m not in ['HEAD', 'OPTIONS']],
+                'endpoint': rule.endpoint
+            })
+        
+        # 按路徑排序
+        routes.sort(key=lambda x: x['path'])
+        
+        return jsonify({
+            'success': True,
+            'total_routes': len(routes),
+            'routes': routes,
+            'blueprints': list(current_app.blueprints.keys())
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # 測試數據API路由
 @test_bp.route('/api/record', methods=['POST'])
 def record_test_result():
