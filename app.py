@@ -61,7 +61,15 @@ def create_app():
     except Exception as e:
         logger.error(f"存儲路由註冊失敗: {e}")
     
-    # 動態發現和註冊藍圖
+    # 手動註冊關鍵藍圖
+    try:
+        from routes.v1.video.caption_video import v1_video_caption_bp
+        app.register_blueprint(v1_video_caption_bp)
+        logger.info("手動註冊 caption_video 藍圖成功")
+    except Exception as e:
+        logger.error(f"手動註冊 caption_video 藍圖失敗: {e}")
+    
+    # 動態發現和註冊其他藍圖
     try:
         blueprints = discover_and_register_blueprints(app)
         logger.info(f"動態註冊了 {len(blueprints)} 個藍圖")
