@@ -1,0 +1,23 @@
+{
+  "name": "no-code-architects-toolkit",
+  "version": "1.0.0",
+  "description": "No-Code Architects Toolkit with Tailwind CSS",
+  "main": "app.py",
+  "scripts": {
+    "build-css": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch",
+    "build-css-prod": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10"
+  },
+  "keywords": [
+    "tailwindcss",
+    "flask",
+    "no-code",
+    "toolkit"
+  ],
+  "author": "No-Code Architects",
+  "license": "MIT"
+}
