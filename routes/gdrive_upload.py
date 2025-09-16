@@ -259,12 +259,11 @@ def log_system_resources():
                             f"({percentage:.2f}%), Elapsed Time: {int(elapsed_time)} seconds"
                         )
 
-                    # Log system resource usage every 5%
+                    # Log system resource usage every 5% (simplified for Zeabur compatibility)
                     if int(percentage) >= progress.last_logged_resource_percentage + 5:
                         progress.last_logged_resource_percentage = int(percentage)
                         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                        logger.info(f"[{current_time}] Memory Usage: {memory_info.percent}% used")
-                        logger.info(f"[{current_time}] Disk Usage: {disk_info.percent}% used")
+                        logger.info(f"[{current_time}] Resource monitoring disabled for Zeabur compatibility")
 
         # Sleep for 1 second before the next update
         time.sleep(1)
