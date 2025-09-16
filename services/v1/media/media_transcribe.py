@@ -17,7 +17,7 @@
 
 
 import os
-import whisper
+from faster_whisper import WhisperModel
 import srt
 from datetime import timedelta
 from services.file_management import download_file
@@ -35,27 +35,66 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
     logger.info(f"Downloaded media to local file: {input_filename}")
 
     try:
-        # Load a larger model for better translation quality
-        #model_size = "large" if task == "translate" else "small"
+        # Load faster-whisper small model for better performance
         model_size = "small"
-        model = whisper.load_model(model_size)
-        logger.info(f"Loaded Whisper {model_size} model")
+        model = WhisperModel(model_size, device="cpu", compute_type="int8")
+        logger.info(f"Loaded faster-whisper {model_size} model")
 
-        # Configure transcription/translation options
-        options = {
-            "task": task,
-            "word_timestamps": word_timestamps,
-            "verbose": False
-        }
-
-        # Add language specification if provided
-        if language:
-            options["language"] = language
-
-        result = model.transcribe(input_filename, **options)
+        # Configure transcription/translation options for faster-whisper
+        language_param = language if language else None
         
-        # Convert segments to list for compatibility
-        segments_list = result['segments']
+        # Perform transcription with faster-whisper
+        segments, info = model.transcribe(
+            input_filename,
+            task=task,
+            language=language_param,
+            word_timestamps=word_timestamps
+        )
+        
+        # Convert faster-whisper result to openai-whisper format for compatibility
+        result = {
+            "text": "",
+            "segments": [],
+            "language": info.language
+        }
+        
+        segments_list = []
+        full_text = []
+        
+        for i, segment in enumerate(segments):
+            segment_data = {
+                "id": i,
+                "start": segment.start,
+                "end": segment.end,
+                "text": segment.text.strip()
+            }
+            
+            # 添加詞級時間戳
+            if word_timestamps and hasattr(segment, 'words') and segment.words:
+                segment_data["words"] = []
+                for word in segment.words:
+                    segment_data["words"].append({
+                        "start": word.start,
+                        "end": word.end,
+                        "word": word.word,
+                        "probability": word.probability
+                    })
+            
+            # Create a simple object for compatibility
+            class SegmentObj:
+                def __init__(self, data):
+                    self.start = data["start"]
+                    self.end = data["end"]
+                    self.text = data["text"]
+                    self.id = data["id"]
+                    if "words" in data:
+                        self.words = data["words"]
+            
+            segments_list.append(SegmentObj(segment_data))
+            result["segments"].append(segment_data)
+            full_text.append(segment.text.strip())
+        
+        result["text"] = " ".join(full_text)
         
         # For translation task, the result will be in English
         text = None

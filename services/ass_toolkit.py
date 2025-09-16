@@ -20,7 +20,7 @@ import os
 import ffmpeg
 import logging
 import subprocess
-import whisper
+from faster_whisper import WhisperModel
 from datetime import timedelta
 import srt
 import re
@@ -64,17 +64,49 @@ def rgb_to_ass_color(rgb_color):
 
 def generate_transcription(video_path, language='auto'):
     try:
-        # 使用openai-whisper small模型統一轉錄
-        model = whisper.load_model("small")
+        # 使用faster-whisper small模型統一轉錄
+        model = WhisperModel("small", device="cpu", compute_type="int8")
         
-        # openai-whisper的API調用
-        result = model.transcribe(
+        # faster-whisper的API調用
+        segments, info = model.transcribe(
             video_path, 
             language=None if language == 'auto' else language,
             word_timestamps=True
         )
         
-        logger.info(f"Transcription generated successfully for video: {video_path} using openai-whisper small model")
+        # 轉換為openai-whisper格式以保持兼容性
+        result = {
+            "text": "",
+            "segments": [],
+            "language": info.language
+        }
+        
+        full_text = []
+        for i, segment in enumerate(segments):
+            segment_data = {
+                "id": i,
+                "start": segment.start,
+                "end": segment.end,
+                "text": segment.text.strip()
+            }
+            
+            # 添加詞級時間戳
+            if hasattr(segment, 'words') and segment.words:
+                segment_data["words"] = []
+                for word in segment.words:
+                    segment_data["words"].append({
+                        "start": word.start,
+                        "end": word.end,
+                        "word": word.word,
+                        "probability": word.probability
+                    })
+            
+            result["segments"].append(segment_data)
+            full_text.append(segment.text.strip())
+        
+        result["text"] = " ".join(full_text)
+        
+        logger.info(f"Transcription generated successfully for video: {video_path} using faster-whisper small model")
         return result
     except Exception as e:
         logger.error(f"Error in transcription: {str(e)}")

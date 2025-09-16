@@ -13,8 +13,7 @@ requests==2.31.0
 pymysql==1.1.0
 
 # AI/ML - CPU Optimized
-# 統一使用 openai-whisper small 模型
-openai-whisper>=20231117
+# 統一使用 faster-whisper small 模型
 faster-whisper==1.0.2
 numpy>=1.21.0
 
