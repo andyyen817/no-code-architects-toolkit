@@ -23,6 +23,15 @@ import threading
 import requests
 import uuid
 import json
+from datetime import datetime
+import time
+# import psutil  # Removed for Zeabur deployment compatibility
+from services.authentication import authenticate
+from app_utils import validate_payload, queue_task_wrapper
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
 # Google OAuth2 dependencies - conditional import
 try:
     from google.oauth2.service_account import Credentials
@@ -31,15 +40,9 @@ try:
 except ImportError:
     GOOGLE_AUTH_AVAILABLE = False
     logger.warning("Google OAuth2 not available - gdrive upload disabled")
-from datetime import datetime
-import time
-# import psutil  # Removed for Zeabur deployment compatibility
-from services.authentication import authenticate
-from app_utils import validate_payload, queue_task_wrapper
 
-# Configure logging
+# Continue with logging configuration
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Define the blueprint
 gdrive_upload_bp = Blueprint('gdrive_upload', __name__)
