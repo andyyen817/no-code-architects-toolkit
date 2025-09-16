@@ -19,8 +19,16 @@
 import os
 import json
 import logging
-from google.oauth2 import service_account
-from google.cloud import storage
+
+# Google Cloud dependencies - conditional import
+try:
+    from google.oauth2 import service_account
+    from google.cloud import storage
+    GCP_AVAILABLE = True
+except ImportError:
+    GCP_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("Google Cloud dependencies not available - GCP features disabled")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +40,10 @@ STORAGE_PATH = "/tmp/"
 gcs_client = None
 
 def initialize_gcp_client():
+    if not GCP_AVAILABLE:
+        logger.warning("GCP dependencies not available. Skipping GCS client initialization.")
+        return None
+        
     GCP_SA_CREDENTIALS = os.getenv('GCP_SA_CREDENTIALS')
 
     if not GCP_SA_CREDENTIALS:
@@ -56,8 +68,13 @@ def initialize_gcp_client():
 gcs_client = initialize_gcp_client()
 
 def upload_to_gcs(file_path, bucket_name=GCP_BUCKET_NAME):
+    if not GCP_AVAILABLE:
+        logger.warning("GCP dependencies not available. Cannot upload to GCS.")
+        return None
+        
     if not gcs_client:
-        raise ValueError("GCS client is not initialized. Skipping file upload.")
+        logger.warning("GCS client is not initialized. Skipping file upload.")
+        return None
 
     try:
         logger.info(f"Uploading file to Google Cloud Storage: {file_path}")
@@ -67,5 +84,5 @@ def upload_to_gcs(file_path, bucket_name=GCP_BUCKET_NAME):
         logger.info(f"File uploaded successfully to GCS: {blob.public_url}")
         return blob.public_url
     except Exception as e:
-        logger.error(f"Error uploading file to GCS: {e}")
-        raise
+        logger.error(f"Failed to upload file to GCS: {e}")
+        return None
