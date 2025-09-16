@@ -61,21 +61,25 @@ def create_app():
     except Exception as e:
         logger.error(f"存儲路由註冊失敗: {e}")
     
-    # 手動註冊關鍵藍圖
-    try:
-        from routes.v1.video.caption_video import v1_video_caption_bp
-        app.register_blueprint(v1_video_caption_bp)
-        logger.info("手動註冊 caption_video 藍圖成功")
-    except Exception as e:
-        logger.error(f"手動註冊 caption_video 藍圖失敗: {e}")
+    # 手動註冊關鍵藍圖（解決Zeabur環境中的註冊問題）
+    critical_blueprints = [
+        ('routes.caption_video', 'caption_bp'),
+        ('routes.v1.video.caption_video', 'v1_video_caption_bp'),
+        ('routes.debug_import_errors', 'debug_import_bp'),
+        ('routes.transcribe_media', 'transcribe_bp'),
+        ('routes.v1.media.transcribe', 'v1_media_transcribe_bp'),
+        ('routes.v1.video.cut', 'v1_video_cut_bp'),
+        ('routes.v1.video.trim', 'v1_video_trim_bp'),
+    ]
     
-    # 手動註冊調試藍圖
-    try:
-        from routes.debug_import_errors import debug_import_bp
-        app.register_blueprint(debug_import_bp)
-        logger.info("手動註冊 debug_import 藍圖成功")
-    except Exception as e:
-        logger.error(f"手動註冊 debug_import 藍圖失敗: {e}")
+    for module_path, blueprint_name in critical_blueprints:
+        try:
+            module = __import__(module_path, fromlist=[blueprint_name])
+            blueprint = getattr(module, blueprint_name)
+            app.register_blueprint(blueprint)
+            logger.info(f"手動註冊藍圖成功: {blueprint_name}")
+        except Exception as e:
+            logger.error(f"手動註冊藍圖失敗 {module_path}.{blueprint_name}: {e}")
     
     # 動態發現和註冊其他藍圖
     try:
