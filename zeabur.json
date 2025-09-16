@@ -17,7 +17,7 @@
         "WHISPER_CACHE_DIR": "/app/whisper_cache",
         "FFMPEG_THREADS": "2",
         "MAX_VIDEO_SIZE": "100MB",
-        "WHISPER_MODEL": "tiny",
+        "WHISPER_MODEL": "small",
         "VOICE_CLONE_DIR": "/app/voice_clone",
         "DIGITAL_HUMAN_DIR": "/app/digital_human"
       },
