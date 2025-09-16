@@ -586,7 +586,13 @@
             showLoading('captionResult');
             const data = {
                 video_url: videoUrl,
-                captions: text || undefined
+                captions: text || undefined,
+                settings: {
+                    font_family: "DejaVu Sans",
+                    font_size: 24,
+                    position: "bottom_center",
+                    alignment: "center"
+                }
             };
             
             makeApiCall('/v1/video/caption', 'POST', data)
