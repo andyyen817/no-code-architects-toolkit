@@ -227,9 +227,10 @@ def transcribe_media_real_cpu():
                 "output": response_data,
                 "performance": {
                     "processing_time_seconds": process_time,
-                    "model_used": "faster-whisper-tiny-cpu",
+                    "model_used": "faster-whisper-small-cpu",
                     "compute_type": "int8",
-                    "device": "cpu"
+                    "device": "cpu",
+                    "environment": "global_python"
                 }
             }), 200
 

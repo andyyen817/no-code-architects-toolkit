@@ -10,6 +10,52 @@
 - ✅ 添加存儲卷配置詳細說明
 - ✅ 增加付費用戶存儲管理配置
 
+## 📋 zeabur服务器跟MYSQL数据库基本资料
+vidspark后端服务器 zeabur项目名称：hicedaba
+服务器区域：taipei,taiwan
+
+服务器：
+內網存取：
+主機名稱
+vidsparkback.zeabur.internal
+
+連線埠
+HTTP:8080
+
+公有網路：
+vidsparkback.zeabur.app
+
+容器連線埠
+HTTP:8080
+
+zebur mysql基本资料：
+Instructions
+
+Command to connect to your MySQL：mysqlsh --sql --host=tpe1.clusters.zeabur.com --port=30791 --user=root --password=248s1xp5zOiwdLe0MqGQ3W7nTE9YZVh6 --schema=zeabur
+
+MySQL username；root
+
+MySQL password：248s1xp5zOiwdLe0MqGQ3W7nTE9YZVh6
+
+MySQL database：zeabur
+
+MySQL host：tpe1.clusters.zeabur.com
+
+MySQL port：30791
+
+ZEABUR MYSQL服务器网路地址：
+內網存取：
+主機名稱
+mysql.zeabur.internal
+
+連線埠
+TCP:3306
+
+公有網路：
+tpe1.clusters.zeabur.com
+連線埠:30791
+容器連線埠 TCP:3306
+
 ## 🎯 環境變量分類配置
 
 ### 📱 Zeabur 項目環境變量（在主應用服務中設置）
