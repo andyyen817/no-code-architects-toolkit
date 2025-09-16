@@ -17,13 +17,25 @@
 
 
 import os
-import boto3
 import logging
 from urllib.parse import urlparse, quote
+
+# Conditional import for boto3
+try:
+    import boto3
+    BOTO3_AVAILABLE = True
+except ImportError:
+    BOTO3_AVAILABLE = False
+    boto3 = None
+    logging.getLogger(__name__).warning("boto3 not available, S3 functionality disabled")
 
 logger = logging.getLogger(__name__)
 
 def upload_to_s3(file_path, s3_url, access_key, secret_key, bucket_name, region):
+    if not BOTO3_AVAILABLE or boto3 is None:
+        logger.warning("boto3 not available, cannot upload to S3")
+        return None
+        
     # Parse the S3 URL into bucket, region, and endpoint
     #bucket_name, region, endpoint_url = parse_s3_url(s3_url)
     
