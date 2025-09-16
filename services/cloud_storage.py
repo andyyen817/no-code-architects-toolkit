@@ -19,10 +19,23 @@
 import os
 import logging
 from abc import ABC, abstractmethod
-from services.gcp_toolkit import upload_to_gcs
-from services.s3_toolkit import upload_to_s3
-from config import validate_env_vars
 from urllib.parse import urlparse
+from config import validate_env_vars
+
+# Conditional imports for cloud services
+try:
+    from services.gcp_toolkit import upload_to_gcs
+    GCP_TOOLKIT_AVAILABLE = True
+except ImportError:
+    GCP_TOOLKIT_AVAILABLE = False
+    upload_to_gcs = None
+
+try:
+    from services.s3_toolkit import upload_to_s3
+    S3_TOOLKIT_AVAILABLE = True
+except ImportError:
+    S3_TOOLKIT_AVAILABLE = False
+    upload_to_s3 = None
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +61,9 @@ class GCPStorageProvider(CloudStorageProvider):
         self.bucket_name = os.getenv('GCP_BUCKET_NAME')
 
     def upload_file(self, file_path: str) -> str:
+        if not GCP_TOOLKIT_AVAILABLE or upload_to_gcs is None:
+            logger.warning("GCP toolkit not available, cannot upload to GCS")
+            return None
         return upload_to_gcs(file_path, self.bucket_name)
 
 class S3CompatibleProvider(CloudStorageProvider):
@@ -84,6 +100,9 @@ class S3CompatibleProvider(CloudStorageProvider):
                 logger.warning(f"Failed to parse Digital Ocean URL: {e}. Using provided values.")
 
     def upload_file(self, file_path: str) -> str:
+        if not S3_TOOLKIT_AVAILABLE or upload_to_s3 is None:
+            logger.warning("S3 toolkit not available, cannot upload to S3")
+            return None
         return upload_to_s3(file_path, self.endpoint_url, self.access_key, self.secret_key, self.bucket_name, self.region)
 
 class LocalStorageProvider(CloudStorageProvider):
@@ -112,7 +131,7 @@ class LocalStorageProvider(CloudStorageProvider):
 
 def get_storage_provider() -> CloudStorageProvider:
     
-    if os.getenv('S3_ENDPOINT_URL'):
+    if os.getenv('S3_ENDPOINT_URL') and S3_TOOLKIT_AVAILABLE:
 
         if ('digitalocean' in os.getenv('S3_ENDPOINT_URL').lower()):
 
@@ -122,13 +141,18 @@ def get_storage_provider() -> CloudStorageProvider:
 
         return S3CompatibleProvider()
     
-    if os.getenv('GCP_BUCKET_NAME'):
+    if os.getenv('GCP_BUCKET_NAME') and GCP_TOOLKIT_AVAILABLE:
 
         validate_env_vars('GCP')
         return GCPStorageProvider()
     
-    # Fallback to local storage if no cloud storage is configured
-    logger.info("No cloud storage configured, using local storage")
+    # Fallback to local storage if no cloud storage is configured or toolkits unavailable
+    if not S3_TOOLKIT_AVAILABLE and os.getenv('S3_ENDPOINT_URL'):
+        logger.warning("S3 toolkit not available, falling back to local storage")
+    if not GCP_TOOLKIT_AVAILABLE and os.getenv('GCP_BUCKET_NAME'):
+        logger.warning("GCP toolkit not available, falling back to local storage")
+    
+    logger.info("Using local storage")
     return LocalStorageProvider()
 
 def upload_file(file_path: str) -> str:
