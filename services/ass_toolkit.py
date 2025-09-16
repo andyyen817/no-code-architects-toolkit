@@ -749,6 +749,8 @@ def generate_ass_captions_v1(video_url, captions, settings, replace, exclude_tim
     If PlayResX and PlayResY are provided, use them for ASS generation; otherwise, get from video.
     """
     try:
+        logger.info(f"Job {job_id}: 步驟3 - 開始核心字幕生成服務處理")
+        
         # Normalize exclude_time_ranges to ensure start/end are floats
         if exclude_time_ranges:
             exclude_time_ranges = normalize_exclude_time_ranges(exclude_time_ranges)
@@ -802,21 +804,23 @@ def generate_ass_captions_v1(video_url, captions, settings, replace, exclude_tim
             captions_content = None
 
         # Download the video
+        logger.info(f"Job {job_id}: 步驟3 - 開始視頻文件下載")
         try:
             video_path = download_file(video_url, LOCAL_STORAGE_PATH)
-            logger.info(f"Job {job_id}: Video downloaded to {video_path}")
+            logger.info(f"Job {job_id}: 步驟3 - 視頻文件下載完成: {video_path}")
         except Exception as e:
-            logger.error(f"Job {job_id}: Video download error: {str(e)}")
+            logger.error(f"Job {job_id}: 步驟3 - 視頻文件下載失敗: {str(e)}")
             # For non-font errors, do NOT include available_fonts
             return {"error": str(e)}
 
         # Get video resolution, unless provided
+        logger.info(f"Job {job_id}: 步驟4 - 開始視頻分辨率檢測")
         if PlayResX is not None and PlayResY is not None:
             video_resolution = (PlayResX, PlayResY)
-            logger.info(f"Job {job_id}: Using provided PlayResX/PlayResY = {PlayResX}x{PlayResY}")
+            logger.info(f"Job {job_id}: 步驟4 - 使用提供的分辨率: {PlayResX}x{PlayResY}")
         else:
             video_resolution = get_video_resolution(video_path)
-            logger.info(f"Job {job_id}: Video resolution detected = {video_resolution[0]}x{video_resolution[1]}")
+            logger.info(f"Job {job_id}: 步驟4 - 視頻分辨率檢測完成: {video_resolution[0]}x{video_resolution[1]}")
 
         # Determine style type
         style_type = style_options.get('style', 'classic').lower()
@@ -824,31 +828,36 @@ def generate_ass_captions_v1(video_url, captions, settings, replace, exclude_tim
 
         # Determine subtitle content
         if captions_content:
+            logger.info(f"Job {job_id}: 步驟6 - 開始處理手動字幕內容")
             # Check if it's ASS by looking for '[Script Info]'
             if '[Script Info]' in captions_content:
                 # It's ASS directly
                 subtitle_content = captions_content
                 subtitle_type = 'ass'
-                logger.info(f"Job {job_id}: Detected ASS formatted captions.")
+                logger.info(f"Job {job_id}: 步驟6 - 檢測到ASS格式字幕")
             else:
                 # Treat as SRT
-                logger.info(f"Job {job_id}: Detected SRT formatted captions.")
+                logger.info(f"Job {job_id}: 步驟6 - 檢測到SRT格式字幕")
                 # Validate style for SRT
                 if style_type != 'classic':
                     error_message = "Only 'classic' style is supported for SRT captions."
-                    logger.error(f"Job {job_id}: {error_message}")
+                    logger.error(f"Job {job_id}: 步驟6 - SRT字幕樣式驗證失敗: {error_message}")
                     return {"error": error_message}
                 transcription_result = srt_to_transcription_result(captions_content)
                 # Generate ASS based on chosen style
                 subtitle_content = process_subtitle_events(transcription_result, style_type, settings, replace_dict, video_resolution)
                 subtitle_type = 'ass'
+                logger.info(f"Job {job_id}: 步驟6 - 手動字幕格式轉換完成")
         else:
             # No captions provided, generate transcription
-            logger.info(f"Job {job_id}: No captions provided, generating transcription.")
+            logger.info(f"Job {job_id}: 步驟5 - 開始自動語音轉錄")
             transcription_result = generate_transcription(video_path, language=language)
+            logger.info(f"Job {job_id}: 步驟5 - 自動語音轉錄完成")
             # Generate ASS based on chosen style
+            logger.info(f"Job {job_id}: 步驟6 - 開始字幕格式處理")
             subtitle_content = process_subtitle_events(transcription_result, style_type, settings, replace_dict, video_resolution)
             subtitle_type = 'ass'
+            logger.info(f"Job {job_id}: 步驟6 - 字幕格式處理完成")
 
         # Check for subtitle processing errors
         if isinstance(subtitle_content, dict) and 'error' in subtitle_content:
@@ -860,14 +869,16 @@ def generate_ass_captions_v1(video_url, captions, settings, replace, exclude_tim
                 return {"error": subtitle_content['error']}
 
         # After subtitle_content is generated and before saving to file:
+        logger.info(f"Job {job_id}: 步驟7 - 開始字幕樣式處理")
         if exclude_time_ranges:
             subtitle_content = filter_subtitle_lines(subtitle_content, exclude_time_ranges, subtitle_type)
             if subtitle_type == 'ass':
-                logger.info(f"Job {job_id}: Filtered ASS Dialogue lines due to exclude_time_ranges.")
+                logger.info(f"Job {job_id}: 步驟7 - ASS字幕時間範圍過濾完成")
             elif subtitle_type == 'srt':
-                logger.info(f"Job {job_id}: Filtered SRT subtitle blocks due to exclude_time_ranges.")
+                logger.info(f"Job {job_id}: 步驟7 - SRT字幕時間範圍過濾完成")
 
         # Save the subtitle content
+        logger.info(f"Job {job_id}: 步驟8 - 開始字幕文件生成")
         subtitle_filename = f"{job_id}.{subtitle_type}"
         # Convert relative path to absolute path to avoid FFmpeg path issues
         absolute_storage_path = os.path.abspath(LOCAL_STORAGE_PATH)
@@ -877,9 +888,9 @@ def generate_ass_captions_v1(video_url, captions, settings, replace, exclude_tim
             os.makedirs(absolute_storage_path, exist_ok=True)
             with open(subtitle_path, 'w', encoding='utf-8') as f:
                 f.write(subtitle_content)
-            logger.info(f"Job {job_id}: Subtitle file saved to {subtitle_path}")
+            logger.info(f"Job {job_id}: 步驟8 - 字幕文件生成完成: {subtitle_path}")
         except Exception as e:
-            logger.error(f"Job {job_id}: Failed to save subtitle file: {str(e)}")
+            logger.error(f"Job {job_id}: 步驟8 - 字幕文件生成失敗: {str(e)}")
             return {"error": f"Failed to save subtitle file: {str(e)}"}
 
         return subtitle_path

@@ -87,13 +87,23 @@ def test_caption_video():
     exclude_time_ranges = data.get('exclude_time_ranges', [])
     webhook_url = data.get('webhook_url')
     id_param = data.get('id')
+    
+    # 生成作業ID
+    job_id = f"test_{id_param}" if id_param else "test_job"
 
-    logger.info(f"Test caption request for {video_url}")
-    logger.info(f"Settings: {settings}")
+    # 十步法 - 第一步：請求接收與驗證（測試端點）
+    logger.info(f"Job {job_id}: [步驟1/8] 請求接收與驗證 - 開始處理測試字幕請求（無需認證）")
+    logger.info(f"Job {job_id}: [步驟1/8] 視頻URL: {video_url}")
+    logger.info(f"Job {job_id}: [步驟1/8] 字幕內容: {'已提供' if captions else '未提供，將使用自動轉錄'}")
+    logger.info(f"Job {job_id}: [步驟1/8] 語言設置: {language}")
+    logger.info(f"Job {job_id}: [步驟1/8] 樣式設置: {settings}")
+    logger.info(f"Job {job_id}: [步驟1/8] 文本替換規則: {replace}")
+    logger.info(f"Job {job_id}: [步驟1/8] 排除時間範圍: {exclude_time_ranges}")
+    logger.info(f"Job {job_id}: [步驟1/8] 測試端點請求驗證完成，準備調用核心服務")
 
     try:
-        # 调用字幕生成服务
-        job_id = f"test_{id_param}" if id_param else "test_job"
+        # 十步法 - 第二步：核心字幕生成服務調用（測試端點）
+        logger.info(f"Job {job_id}: [步驟2/8] 核心字幕生成服務調用 - 開始調用generate_ass_captions_v1（測試模式）")
         result = generate_ass_captions_v1(
             video_url=video_url,
             captions=captions,
@@ -104,42 +114,49 @@ def test_caption_video():
             language=language
         )
         
-        logger.info(f"Caption generation completed: {result}")
+        logger.info(f"Job {job_id}: [步驟8/8] 字幕生成完成 - 測試端點處理結果: {result}")
+        logger.info(f"Job {job_id}: [測試端點說明] 注意：測試端點僅生成字幕文件，不進行視頻渲染和雲端上傳")
         
-        # 构建响应
+        # 十步法 - 測試端點響應返回（步驟1-8完成）
+        logger.info(f"Job {job_id}: [測試端點響應] 開始構建測試端點響應")
         response = {
-            "job_id": f"test_{id_param}" if id_param else "test_job",
+            "job_id": job_id,
             "message": "Video caption generation completed successfully",
             "status": "completed",
-            "output_file": result.get('output_file'),
-            "processing_info": result
+            "output_file": result if isinstance(result, str) else result.get('output_file'),
+            "processing_info": result,
+            "note": "測試端點僅生成字幕文件，如需完整帶字幕視頻請使用 /v1/video/caption"
         }
         
         # 如果有webhook，发送通知
         if webhook_url:
             try:
+                logger.info(f"Job {job_id}: [測試端點響應] 發送Webhook通知到: {webhook_url}")
                 requests.post(webhook_url, json=response, timeout=10)
-                logger.info(f"Webhook notification sent to {webhook_url}")
+                logger.info(f"Job {job_id}: [測試端點響應] Webhook通知發送成功")
             except Exception as webhook_error:
-                logger.warning(f"Failed to send webhook: {webhook_error}")
+                logger.warning(f"Job {job_id}: [測試端點響應] Webhook發送失敗: {webhook_error}")
         
+        logger.info(f"Job {job_id}: [測試端點響應] 測試字幕生成流程完成！")
         return jsonify(response), 200
         
     except Exception as e:
-        logger.error(f"Error in test caption generation: {e}")
+        logger.error(f"Job {job_id}: [測試端點錯誤] 測試字幕生成失敗: {e}", exc_info=True)
         error_response = {
-            "job_id": f"test_{id_param}" if id_param else "test_job",
+            "job_id": job_id,
             "message": f"Video caption generation failed: {str(e)}",
             "status": "failed",
-            "error": str(e)
+            "error": str(e),
+            "note": "測試端點錯誤，請檢查日誌獲取詳細信息"
         }
         
         # 如果有webhook，发送错误通知
         if webhook_url:
             try:
+                logger.info(f"Job {job_id}: [測試端點錯誤] 發送錯誤Webhook通知到: {webhook_url}")
                 requests.post(webhook_url, json=error_response, timeout=10)
-                logger.info(f"Error webhook notification sent to {webhook_url}")
+                logger.info(f"Job {job_id}: [測試端點錯誤] 錯誤Webhook通知發送成功")
             except Exception as webhook_error:
-                logger.warning(f"Failed to send error webhook: {webhook_error}")
+                logger.warning(f"Job {job_id}: [測試端點錯誤] 錯誤Webhook發送失敗: {webhook_error}")
         
         return jsonify(error_response), 500

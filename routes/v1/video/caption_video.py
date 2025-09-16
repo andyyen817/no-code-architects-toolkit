@@ -25,7 +25,7 @@ from services.cloud_storage import upload_file
 import os
 import requests  # Ensure requests is imported for webhook handling
 
-v1_video_caption_bp = Blueprint('v1_video/caption', __name__)
+v1_video_caption_bp = Blueprint('v1_video_caption', __name__)
 logger = logging.getLogger(__name__)
 
 @v1_video_caption_bp.route('/v1/video/caption', methods=['POST'])
@@ -119,18 +119,25 @@ def caption_video_v1():
     import uuid
     job_id = str(uuid.uuid4())[:8]
 
-    logger.info(f"Job {job_id}: Received v1 captioning request for {video_url}")
-    logger.info(f"Job {job_id}: Settings received: {settings}")
-    logger.info(f"Job {job_id}: Replace rules received: {replace}")
-    logger.info(f"Job {job_id}: Exclude time ranges received: {exclude_time_ranges}")
+    # 十步法 - 第一步：請求接收與驗證
+    logger.info(f"Job {job_id}: [步驟1/10] 請求接收與驗證 - 開始處理影片字幕請求")
+    logger.info(f"Job {job_id}: [步驟1/10] 視頻URL: {video_url}")
+    logger.info(f"Job {job_id}: [步驟1/10] 字幕內容: {'已提供' if captions else '未提供，將使用自動轉錄'}")
+    logger.info(f"Job {job_id}: [步驟1/10] 語言設置: {language}")
+    logger.info(f"Job {job_id}: [步驟1/10] 樣式設置: {settings}")
+    logger.info(f"Job {job_id}: [步驟1/10] 文本替換規則: {replace}")
+    logger.info(f"Job {job_id}: [步驟1/10] 排除時間範圍: {exclude_time_ranges}")
+    logger.info(f"Job {job_id}: [步驟1/10] 請求驗證完成，準備調用核心服務")
 
     try:
         # Do NOT combine position and alignment. Keep them separate.
         # Just pass settings directly to process_captioning_v1.
         # This ensures position and alignment remain independent keys.
         
-        # Process video with the enhanced v1 service
+        # 十步法 - 第二步：核心字幕生成服務調用
+        logger.info(f"Job {job_id}: [步驟2/10] 核心字幕生成服務調用 - 開始調用generate_ass_captions_v1")
         output = generate_ass_captions_v1(video_url, captions, settings, replace, exclude_time_ranges, job_id, language)
+        logger.info(f"Job {job_id}: [步驟2/10] 核心服務調用完成")
         
         if isinstance(output, dict) and 'error' in output:
             # Check if this is a font-related error by checking for 'available_fonts' key
@@ -143,29 +150,31 @@ def caption_video_v1():
 
         # If processing was successful, output is the ASS file path
         ass_path = output
-        logger.info(f"Job {job_id}: ASS file generated at {ass_path}")
+        logger.info(f"Job {job_id}: [步驟8/10] 字幕文件生成完成 - ASS文件路徑: {ass_path}")
 
         # Prepare output filename and path for the rendered video
         output_filename = f"{job_id}_captioned.mp4"
         output_path = os.path.join(os.path.dirname(ass_path), output_filename)
 
-        # Download the video (if not already local)
+        # 十步法 - 第三步：視頻文件下載（如果尚未本地化）
         video_path = None
         try:
+            logger.info(f"Job {job_id}: [步驟3/10] 視頻文件下載 - 開始下載視頻文件")
             from services.file_management import download_file
             from config import LOCAL_STORAGE_PATH
             video_path = download_file(video_url, LOCAL_STORAGE_PATH)
-            logger.info(f"Job {job_id}: Video downloaded to {video_path}")
+            logger.info(f"Job {job_id}: [步驟3/10] 視頻下載完成 - 本地路徑: {video_path}")
         except Exception as e:
-            logger.error(f"Job {job_id}: Video download error: {str(e)}")
+            logger.error(f"Job {job_id}: [步驟3/10] 視頻下載失敗: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
-        # Render the video with subtitles using FFmpeg
+        # 十步法 - 第九步：視頻渲染（FFmpeg處理）
         try:
             import ffmpeg
-            # Process video with FFmpeg using relative paths to avoid Windows path issues
-            logger.info(f"Job {job_id}: Processing video with FFmpeg: {video_path} -> {output_path}")
-            logger.info(f"Job {job_id}: Using subtitle file: {ass_path}")
+            logger.info(f"Job {job_id}: [步驟9/10] 視頻渲染 - 開始使用FFmpeg處理視頻")
+            logger.info(f"Job {job_id}: [步驟9/10] 輸入視頻: {video_path}")
+            logger.info(f"Job {job_id}: [步驟9/10] 字幕文件: {ass_path}")
+            logger.info(f"Job {job_id}: [步驟9/10] 輸出路徑: {output_path}")
             
             # Get the directory containing the files
             video_dir = os.path.dirname(os.path.abspath(video_path))
@@ -194,21 +203,23 @@ def caption_video_v1():
                 # Always restore original working directory
                 os.chdir(original_cwd)
                 logger.info(f"Job {job_id}: Restored working directory to: {original_cwd}")
-            logger.info(f"Job {job_id}: FFmpeg processing completed. Output saved to {output_path}")
+            logger.info(f"Job {job_id}: [步驟9/10] FFmpeg處理完成 - 帶字幕視頻已生成: {output_path}")
         except Exception as e:
-            logger.error(f"Job {job_id}: FFmpeg error: {str(e)}")
+            logger.error(f"Job {job_id}: [步驟9/10] FFmpeg處理失敗: {str(e)}")
             return jsonify({"error": f"FFmpeg error: {str(e)}"}), 500
 
         # Clean up the ASS file after use
         os.remove(ass_path)
 
-        # Upload the captioned video
+        # 十步法 - 第十步：響應返回
+        logger.info(f"Job {job_id}: [步驟10/10] 響應返回 - 開始上傳到雲端存儲")
         cloud_url = upload_file(output_path)
-        logger.info(f"Job {job_id}: Captioned video uploaded to cloud storage: {cloud_url}")
+        logger.info(f"Job {job_id}: [步驟10/10] 雲端上傳完成 - URL: {cloud_url}")
 
         # Clean up the output file after upload
         os.remove(output_path)
-        logger.info(f"Job {job_id}: Cleaned up local output file")
+        logger.info(f"Job {job_id}: [步驟10/10] 本地文件清理完成")
+        logger.info(f"Job {job_id}: [步驟10/10] 影片字幕處理流程全部完成！")
 
         return jsonify({
             "job_id": job_id,
