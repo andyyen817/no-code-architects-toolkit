@@ -69,6 +69,14 @@ def create_app():
     except Exception as e:
         logger.error(f"手動註冊 caption_video 藍圖失敗: {e}")
     
+    # 手動註冊調試藍圖
+    try:
+        from routes.debug_import_errors import debug_import_bp
+        app.register_blueprint(debug_import_bp)
+        logger.info("手動註冊 debug_import 藍圖成功")
+    except Exception as e:
+        logger.error(f"手動註冊 debug_import 藍圖失敗: {e}")
+    
     # 動態發現和註冊其他藍圖
     try:
         blueprints = discover_and_register_blueprints(app)
