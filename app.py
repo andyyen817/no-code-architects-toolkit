@@ -40,7 +40,7 @@ logger.info("数据库管理器已重置，将使用新的环境变量")
 
 def create_app():
     """創建Flask應用實例"""
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='static', static_url_path='/static')
     
     # 加載配置
     config = get_app_config()
