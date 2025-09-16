@@ -11,6 +11,7 @@ import json
 import sys
 import traceback
 import importlib
+import importlib.util
 from datetime import datetime
 
 # Try to import pymysql with fallback
@@ -714,5 +715,96 @@ def test_caption_import():
             'error': str(e),
             'traceback': traceback.format_exc()
         }
+    
+    return jsonify(results)
+
+@test_bp.route('/original/caption/debug', methods=['GET'])
+def debug_original_caption():
+    """詳細測試原始caption_video模組的導入問題"""
+    results = {
+        'test_timestamp': datetime.now().isoformat(),
+        'python_version': sys.version,
+        'step_by_step_import': {}
+    }
+    
+    # 逐步測試導入
+    import_steps = [
+        ('flask', 'from flask import Blueprint, jsonify, request'),
+        ('app_utils', 'from app_utils import validate_payload'),
+        ('logging', 'import logging'),
+        ('services.ass_toolkit', 'from services.ass_toolkit import generate_ass_file'),
+        ('services.authentication', 'from services.authentication import authenticate'),
+        ('services.cloud_storage', 'from services.cloud_storage import upload_to_cloud, download_from_cloud'),
+        ('os', 'import os'),
+        ('requests', 'import requests')
+    ]
+    
+    for step_name, import_statement in import_steps:
+        try:
+            exec(import_statement)
+            results['step_by_step_import'][step_name] = {
+                'status': 'success',
+                'import_statement': import_statement,
+                'error': None
+            }
+        except Exception as e:
+            results['step_by_step_import'][step_name] = {
+                'status': 'failed',
+                'import_statement': import_statement,
+                'error': str(e),
+                'traceback': traceback.format_exc()
+            }
+    
+    # 嘗試導入整個模組
+    try:
+        # 先嘗試導入模組但不執行
+        import importlib.util
+        import os as os_module
+        file_path = os_module.path.join(os_module.getcwd(), 'routes', 'v1', 'video', 'caption_video.py')
+        spec = importlib.util.spec_from_file_location(
+            "caption_video", 
+            file_path
+        )
+        if spec and spec.loader:
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            results['full_module_import'] = {
+                'status': 'success',
+                'blueprint_found': hasattr(module, 'v1_video_caption_bp'),
+                'module_attributes': [attr for attr in dir(module) if not attr.startswith('_')]
+            }
+        else:
+            results['full_module_import'] = {
+                'status': 'failed',
+                'error': 'Could not create module spec',
+                'file_path': file_path
+            }
+    except Exception as e:
+        results['full_module_import'] = {
+            'status': 'failed',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }
+    
+    # 檢查services模組的具體問題
+    services_tests = [
+        'services.ass_toolkit',
+        'services.authentication',
+        'services.cloud_storage'
+    ]
+    
+    results['services_detailed'] = {}
+    for service in services_tests:
+        try:
+            module = importlib.import_module(service)
+            results['services_detailed'][service] = {
+                'status': 'success',
+                'attributes': [attr for attr in dir(module) if not attr.startswith('_')][:10]  # 限制輸出
+            }
+        except Exception as e:
+            results['services_detailed'][service] = {
+                'status': 'failed',
+                'error': str(e)
+            }
     
     return jsonify(results)
