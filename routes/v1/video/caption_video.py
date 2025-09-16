@@ -136,6 +136,10 @@ def caption_video_v1():
         
         # 十步法 - 第二步：核心字幕生成服務調用
         logger.info(f"Job {job_id}: [步驟2/10] 核心字幕生成服務調用 - 開始調用generate_ass_captions_v1")
+        logger.info(f"Job {job_id}: [步驟4/10] 視頻分辨率檢測 - 即將開始檢測視頻分辨率")
+        logger.info(f"Job {job_id}: [步驟5/10] 自動語音轉錄 - 準備進行語音識別處理")
+        logger.info(f"Job {job_id}: [步驟6/10] 字幕格式處理 - 開始處理字幕格式轉換")
+        logger.info(f"Job {job_id}: [步驟7/10] 字幕樣式處理 - 開始應用字幕樣式設置")
         output = generate_ass_captions_v1(video_url, captions, settings, replace, exclude_time_ranges, job_id, language)
         logger.info(f"Job {job_id}: [步驟2/10] 核心服務調用完成")
         
