@@ -8,6 +8,9 @@
 from flask import Blueprint, send_file, jsonify, request, current_app
 import os
 import json
+import sys
+import traceback
+import importlib
 from datetime import datetime
 
 # Try to import pymysql with fallback
@@ -646,3 +649,70 @@ def register_test_routes(app):
         </html>
         """
         return html_content
+
+@test_bp.route('/import/caption', methods=['GET'])
+def test_caption_import():
+    """測試caption_video模組的導入"""
+    results = {
+        'test_timestamp': datetime.now().isoformat(),
+        'python_version': sys.version,
+        'import_tests': {}
+    }
+    
+    # 測試基本依賴
+    test_modules = [
+        'flask',
+        'os',
+        'requests',
+        'logging',
+        'app_utils',
+        'services.ass_toolkit',
+        'services.authentication', 
+        'services.cloud_storage'
+    ]
+    
+    for module_name in test_modules:
+        try:
+            importlib.import_module(module_name)
+            results['import_tests'][module_name] = {
+                'status': 'success',
+                'error': None
+            }
+        except Exception as e:
+            results['import_tests'][module_name] = {
+                'status': 'failed',
+                'error': str(e),
+                'traceback': traceback.format_exc()
+            }
+    
+    # 測試caption_video模組導入
+    try:
+        caption_module = importlib.import_module('routes.v1.video.caption_video')
+        results['caption_video_import'] = {
+            'status': 'success',
+            'blueprint_name': str(getattr(caption_module, 'v1_video_caption_bp', None)),
+            'module_attributes': [attr for attr in dir(caption_module) if not attr.startswith('_')]
+        }
+    except Exception as e:
+        results['caption_video_import'] = {
+            'status': 'failed',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }
+    
+    # 測試簡化版caption模組導入
+    try:
+        simple_module = importlib.import_module('routes.v1.video.caption_video_simple')
+        results['caption_video_simple_import'] = {
+            'status': 'success',
+            'blueprint_name': str(getattr(simple_module, 'v1_video_caption_simple_bp', None)),
+            'module_attributes': [attr for attr in dir(simple_module) if not attr.startswith('_')]
+        }
+    except Exception as e:
+        results['caption_video_simple_import'] = {
+            'status': 'failed',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }
+    
+    return jsonify(results)
