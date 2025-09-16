@@ -296,7 +296,7 @@ def transcribe_media_enhanced():
                 "output": response_data,
                 "performance": {
                     "processing_time_seconds": process_time,
-                    "model_used": "faster-whisper-tiny-cpu",
+                    "model_used": "faster-whisper-small-cpu",
                     "compute_type": "int8",
                     "device": "cpu",
                     "environment": "global_python"

@@ -37,7 +37,7 @@ env:
   
   # Whisper配置
   WHISPER_CACHE_DIR: /app/whisper_cache
-  WHISPER_MODEL: tiny
+  WHISPER_MODEL: small
   
   # 優化配置
   MAX_QUEUE_LENGTH: 10
