@@ -27,7 +27,7 @@ srt==3.5.3
 
 # Optional (for enhanced features)
 # Note: These will be installed if available, skipped if not
-# matplotlib>=3.5.0  # For audio visualization
+matplotlib>=3.5.0  # For audio visualization and font support
 # opencv-python-headless>=4.5.0  # For advanced video processing
 
 # System dependencies (handled by Dockerfile):

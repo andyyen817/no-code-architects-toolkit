@@ -10,6 +10,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     build-essential \
     python3-dev \
+    fontconfig \
+    fonts-dejavu-core \
+    fonts-liberation \
+    fonts-noto \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
