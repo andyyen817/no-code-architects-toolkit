@@ -22,7 +22,14 @@
 import os
 import logging
 from io import BytesIO
-from playwright.sync_api import sync_playwright
+
+# Conditional import for playwright
+try:
+    from playwright.sync_api import sync_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    sync_playwright = None
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -34,6 +41,9 @@ if not logger.hasHandlers():
     logger.addHandler(handler)
 
 def take_screenshot(data: dict, job_id=None):
+    if not PLAYWRIGHT_AVAILABLE:
+        raise ImportError("Playwright module is not available. Screenshot functionality is disabled.")
+    
     p = sync_playwright().start()
     try:
         browser = p.chromium.launch(headless=True)
