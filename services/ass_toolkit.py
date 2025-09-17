@@ -645,7 +645,7 @@ def srt_to_ass(transcription_result, style_type, settings, replace_dict, video_r
         'all_caps': False,
         'max_words_per_line': 0,
         'font_size': None,
-        'font_family': 'Arial',
+        'font_family': 'NotoSansSC-VF',
         'bold': False,
         'italic': False,
         'underline': False,

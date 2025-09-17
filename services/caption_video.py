@@ -68,7 +68,7 @@ def generate_style_line(options):
     """Generate ASS style line from options."""
     style_options = {
         'Name': 'Default',
-        'Fontname': options.get('font_name', 'Arial'),
+        'Fontname': options.get('font_name', 'NotoSansSC-VF'),
         'Fontsize': options.get('font_size', 12),
         'PrimaryColour': options.get('primary_color', '&H00FFFFFF'),
         'OutlineColour': options.get('outline_color', '&H00000000'),
@@ -142,13 +142,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         logger.info(f"Job {job_id}: Output path set to {output_path}")
 
         # Ensure font_name is converted to the full font path
-        font_name = options.get('font_name', 'Arial')
+        font_name = options.get('font_name', 'NotoSansSC-VF')
         if font_name in FONT_PATHS:
             selected_font = FONT_PATHS[font_name]
             logger.info(f"Job {job_id}: Font path set to {selected_font}")
         else:
-            selected_font = FONT_PATHS.get('Arial')
-            logger.warning(f"Job {job_id}: Font {font_name} not found. Using default font Arial.")
+            selected_font = FONT_PATHS.get('NotoSansSC-VF') or FONT_PATHS.get('Arial')
+            logger.warning(f"Job {job_id}: Font {font_name} not found. Using default font NotoSansSC-VF or Arial.")
 
         # For ASS subtitles, we should avoid overriding styles
         if subtitle_extension == '.ass':
@@ -159,7 +159,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             # Construct FFmpeg filter options for subtitles with detailed styling
             subtitle_filter = f"subtitles={srt_path}:force_style='"
             style_options = {
-                'FontName': font_name,  # Use the font name instead of the font file path
+                'FontName': selected_font,  # Use the full font path for better compatibility
                 'FontSize': options.get('font_size', 24),
                 'PrimaryColour': options.get('primary_color', '&H00FFFFFF'),
                 'SecondaryColour': options.get('secondary_color', '&H00000000'),
